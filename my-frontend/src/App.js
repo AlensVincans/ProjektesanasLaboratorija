@@ -7,16 +7,18 @@ import RecipeList from "./components/RecipeList";
 import Charts from "./components/Charts";
 
 function App() {
-  const [profile, setProfile] = useState({ allergens:[], dislikes:[] });
+  const [profile, setProfile] = useState({ allergens: [], dislikes: [] });
 
   return (
     <div className="container">
       <Intro />
       <UserForm onSaved={setProfile} />
       <ProductList />
-      <RecipeList allergens={profile.allergens||[]} dislikes={profile.dislikes||[]} />
+      <RecipeList
+        allergens={profile.allergens || []}
+        dislikes={profile.dislikes || []}
+      />
       <Charts />
-      <footer className="muted" style={{marginTop:24}}>© твой проект</footer>
     </div>
   );
 }
