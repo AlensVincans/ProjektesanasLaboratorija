@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const activityOptions = [
   { value: "low", label: "Низкая" },
@@ -33,6 +33,7 @@ function TagInput({ placeholder, suggestions = [], value, setValue }) {
           value={input}
           onChange={(e)=>{ setInput(e.target.value); setOpen(true); }}
           onKeyDown={(e)=>{ if(e.key==="Enter"){ e.preventDefault(); addTag(input);} }}
+          onBlur={()=>setTimeout(()=>setOpen(false), 150)}
           placeholder={placeholder}
         />
       </div>
@@ -60,16 +61,49 @@ export default function UserForm({ onSaved }) {
   const [allergens, setAllergens] = useState([]);
   const [dislikes, setDislikes] = useState([]);
 
+  const [saving, setSaving] = useState(false);
+  const [savedMsg, setSavedMsg] = useState("");
+
   const commonFood = ["Молоко","Глютен","Арахис","Курица","Рыба","Яйцо","Орехи","Рис","Яблоко"];
 
+  // Автоподгрузка профиля из localStorage (если уже сохранён)
+  useEffect(() => {
+    const raw = localStorage.getItem("demo_profile");
+    if (!raw) return;
+    try {
+      const p = JSON.parse(raw);
+      setGender(p.gender ?? "female");
+      setAge(p.age ?? "");
+      setWeight(p.weight ?? "");
+      setHeight(p.height ?? "");
+      setActivity(p.activity ?? "moderate");
+      setAllergens(Array.isArray(p.allergens) ? p.allergens : []);
+      setDislikes(Array.isArray(p.dislikes) ? p.dislikes : []);
+    } catch {}
+  }, []);
+
   const save = async () => {
-    const body = { gender, age:Number(age)||null, weight:Number(weight)||null,
-                   height:Number(height)||null, activity, allergens, dislikes };
-    await fetch("http://localhost:5000/api/profile",{
-      method:"POST", headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(body)
-    });
+    const body = {
+      gender,
+      age: Number(age) || null,
+      weight: Number(weight) || null,
+      height: Number(height) || null,
+      activity,
+      allergens,
+      dislikes,
+    };
+
+    setSaving(true);
+    setSavedMsg("");
+
+    // имитируем сетевой вызов и сохраняем локально
+    await new Promise(res => setTimeout(res, 500));
+    localStorage.setItem("demo_profile", JSON.stringify(body));
+
+    setSaving(false);
+    setSavedMsg("Сохранено локально.");
     onSaved?.(body);
+    setTimeout(() => setSavedMsg(""), 2000);
   };
 
   return (
@@ -119,8 +153,10 @@ export default function UserForm({ onSaved }) {
         />
       </div>
 
-      <button className="primary" onClick={save}>Сохранить</button>
+      <button className="primary" onClick={save} disabled={saving}>
+        {saving ? "Сохранение…" : "Сохранить"}
+      </button>
+      {savedMsg && <span className="muted" style={{ marginLeft: 12 }}>{savedMsg}</span>}
     </div>
   );
 }
-
