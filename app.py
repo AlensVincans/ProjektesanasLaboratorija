@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from pulp import LpProblem, LpVariable, LpMinimize, lpSum, PULP_CBC_CMD, value, LpStatus
+import sqlite3
 import logging
 
 app = Flask(__name__)
@@ -10,7 +11,7 @@ ACTIVITY_MULTIPLIERS = {
     "sedentary": 1.4,
     "low": 1.6,
     "moderate": 1.8,
-    "active": 2.0,
+    "active": 1.9,
     "very active": 2.0
 }
 
@@ -48,17 +49,60 @@ def get_efsa_norms(gender, weight, age, eer_kcal, period_days=1):
         'kcal': eer_kcal * 1.1,
         'kj': eer_kcal * 4.184 * 1.1
     }
-    # Relax fat and calcium constraints to 95% of target
-    # norms['fat'] *= 0.95
-    # norms['Ca'] *= 0.95
     
-    for nut in norms:
-        norms[nut] *= period_days
+    # Масштабируем только макронутриенты и калории на период
+    # Витамины и минералы остаются дневными нормами
+    energy_nutrients = ['protein', 'fat', 'carbs', 'kj', 'kcal']
+    for nut in energy_nutrients:
+        if nut in norms:
+            norms[nut] *= period_days
     for nut in norms_upper:
-        norms_upper[nut] *= period_days
+        if nut in energy_nutrients:
+            norms_upper[nut] *= period_days
     return norms, norms_upper
 
 nut_keys = ['protein', 'fat', 'carbs', 'kj', 'kcal', 'A', 'B1', 'B2', 'PP', 'C', 'Ca', 'P', 'Fe']
+
+def load_products_from_db():
+    """Загружает продукты из базы данных"""
+    import os
+    db_path = os.path.join(os.path.dirname(__file__), 'db.sqlite')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM products")
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    foods = []
+    for row in rows:
+        # Определяем есть ли лактоза в аллергенах
+        has_lactose = 'laktoze' in str(row[15]).lower() if row[15] else False
+        
+        food = {
+            'id': row[0],
+            'name': row[1],
+            'protein': row[2] or 0,
+            'fat': row[3] or 0,
+            'carbs': row[4] or 0,
+            'kj': row[5] or 0,
+            'kcal': row[6] or 0,
+            'A': row[7] or 0,
+            'B1': row[8] or 0,
+            'B2': row[9] or 0,
+            'PP': row[10] or 0,
+            'C': row[11] or 0,
+            'Ca': row[12] or 0,
+            'P': row[13] or 0,
+            'Fe': row[14] or 0,
+            'price_per_100g': row[16] or 0,
+            'has_lactose': has_lactose,
+            'allergens': row[15] or ''
+        }
+        foods.append(food)
+    
+    return foods
 
 @app.route('/optimize', methods=['POST'])
 def optimize_diet():
@@ -88,32 +132,27 @@ def optimize_diet():
     eer_kcal = calculate_energy_needs(bmr, activity)
     norms, norms_upper = get_efsa_norms(gender, weight, age, eer_kcal, period_days)
 
-    sample_rows = [
-        (1, 'Auzu putraimi', 13.0, 6.5, 61.1, 1590.0, 380.0, 0.0, 0.6, 0.14, 0.98, 0.0, 75.0, 327.0, 4.3, 0.2, 0),
-        (2, 'Griku putraimi', 12.5, 2.5, 67.4, 1480.0, 354.0, 0.0, 0.51, 0.24, 4.3, 0.0, 56.0, 294.0, 1.8, 0.3, 0),
-        (3, 'Kartupeli', 2.0, 0.0, 21.0, 394.0, 94.0, 0.0, 0.1, 0.05, 0.9, 10.0, 10.0, 50.0, 1.2, 0.1, 0),
-        (4, 'Govs piens', 3.3, 3.2, 4.7, 272.0, 65.0, 0.05, 0.03, 0.19, 0.4, 3.0, 120.0, 100.0, 0.1, 0.13, 1),
-        (5, 'Vistas ola', 45.0, 4.8, 0.2, 266.0, 63.5, 0.3, 0.07, 0.345, 0.1, 0.0, 20.0, 92.0, 1.1, 0.03, 0),
-        (6, 'Spinati', 2.9, 0.0, 2.3, 88.0, 21.0, 0.0, 0.11, 0.2, 0.6, 50.0, 81.0, 83.0, 3.0, 0.7, 0),
-        (7, 'Liellopu aknas', 17.4, 3.1, 0.0, 510.0, 122.0, 15.0, 0.4, 1.61, 15.3, 25.0, 5.0, 340.0, 9.0, 0.5, 0),
-        (8, 'Fortified soy milk', 3.0, 1.5, 4.0, 200.0, 48.0, 0.1, 0.2, 0.3, 0.5, 10.0, 120.0, 100.0, 1.5, 0.25, 0),
-        (9, 'Almonds', 21.0, 50.0, 21.0, 2400.0, 574.0, 0.0, 0.2, 1.0, 3.7, 0.0, 270.0, 430.0, 3.7, 0.8, 0),
-        (10, 'Sardines', 25.0, 11.5, 0.0, 870.0, 208.0, 0.02, 0.2, 0.3, 2.7, 0.0, 390.0, 360.0, 2.9, 0.6, 0)
-    ]
+    # Загружаем продукты из базы данных
+    foods = load_products_from_db()
 
-    foods = [
-        {'name': row[1], 'protein': row[2], 'fat': row[3], 'carbs': row[4], 'kj': row[5], 'kcal': row[6],
-         'A': row[7], 'B1': row[8], 'B2': row[9], 'PP': row[10], 'C': row[11], 'Ca': row[12], 'P': row[13],
-         'Fe': row[14], 'price_per_100g': row[15], 'has_lactose': bool(row[16])}
-        for row in sample_rows
-    ]
-
-    available_foods = [f for f in foods if not ('lactose' in allergens and f['has_lactose'])]
+    # Фильтруем продукты по аллергенам
+    available_foods = []
+    for food in foods:
+        # Проверяем каждый аллерген
+        skip_food = False
+        for allergen in allergens:
+            if allergen.lower() == 'lactose' and food['has_lactose']:
+                skip_food = True
+                break
+            # Можно добавить проверку других аллергенов здесь
+        if not skip_food:
+            available_foods.append(food)
+    
     if not available_foods:
         return jsonify({'error': 'No foods available after applying restrictions'})
 
     model = LpProblem("Budget_Diet_Optimization", LpMinimize)
-    x = {f['name']: LpVariable(f"{f['name']}", lowBound=0, upBound=10 * period_days) for f in available_foods}
+    x = {f['name']: LpVariable(f"{f['name']}", lowBound=0, upBound=5 * period_days) for f in available_foods}
     model += lpSum(f['price_per_100g'] * x[f['name']] for f in available_foods), "Total_Cost"
 
     for nut in nut_keys:
@@ -135,7 +174,7 @@ def optimize_diet():
                     error_msg['details'] += f" {nut} ({total:.2f} < {norms[nut]:.2f})"
         return jsonify(error_msg)
 
-    diet = {name: round(value(x[name]) * 100 / (7 if period.lower() == 'week' else 1), 2) for name in x if value(x[name]) > 0}
+    diet = {name: round(value(x[name]) * 100 / period_days, 2) for name in x if value(x[name]) > 0}
     total_cost = round(value(model.objective), 2)
     nutrient_totals = {nut: round(sum(f[nut] * value(x[f['name']]) for f in available_foods), 2) for nut in nut_keys}
 
