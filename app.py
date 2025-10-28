@@ -2,6 +2,12 @@ from flask import Flask, request, jsonify
 from pulp import LpProblem, LpVariable, LpMinimize, lpSum, PULP_CBC_CMD, value, LpStatus
 import sqlite3
 import logging
+import requests
+import json
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -62,6 +68,95 @@ def get_efsa_norms(gender, weight, age, eer_kcal, period_days=1):
     return norms, norms_upper
 
 nut_keys = ['protein', 'fat', 'carbs', 'kj', 'kcal', 'A', 'B1', 'B2', 'PP', 'C', 'Ca', 'P', 'Fe']
+
+def generate_meal_plan_with_chatgpt(diet_data, user_info):
+    """Генерирует план питания с помощью ChatGPT"""
+    try:
+        # Получаем API ключ из переменной окружения
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            return {'error': 'OpenAI API key not found. Please set OPENAI_API_KEY environment variable.'}
+        
+        # Подготавливаем данные для ChatGPT
+        products_info = []
+        for product, amount in diet_data['diet'].items():
+            products_info.append(f"- {product}: {amount}г")
+        
+        products_text = '\n'.join(products_info)
+        
+        # Формируем промпт для ответа на латышском языке
+        prompt = f"""
+Tu esi profesionāls uztura speciālists. Izveido detalizētu ēdienkārtu, pamatojoties uz šiem produktiem un to daudzumiem:
+
+PRODUKTI UN DAUDZUMI:
+{products_text}
+
+LIETOTĀJA INFORMĀCIJA:
+- Dzimums: {user_info.get('gender', 'male')}
+- Svars: {user_info.get('weight', 70)} kg
+- Augums: {user_info.get('height', 175)} cm
+- Vecums: {user_info.get('age', 30)} gadi
+- Aktivitātes līmenis: {user_info.get('activity', 'moderate')}
+- Periods: {user_info.get('period', 'day')}
+
+Lūdzu, izveido ēdienkārtu, kas ietver:
+1. ĒDIENU SADALĪJUMU (brokastis, pusdienas, vakariņas, uzkodas)
+2. KONKRĒTUS RECEPTES ar precīziem katra produkta daudzumiem
+3. ĒDIENU LAIKU
+4. PRAKTISKUS GATAVOŠANAS PADOMUS
+
+Atbildei jābūt strukturētai un praktiskai. Izmanto tikai produktus, kas uzskaitīti augstāk.
+
+Formatē atbildi skaidrā, organizētā veidā ar sadaļām katrai maltītei un iekļauj uzturvērtības informāciju.
+
+ATBILDEI JĀBŪT LATVIEŠU VALODĀ!
+"""
+
+        # Отправляем запрос к ChatGPT
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        data = {
+            'model': 'gpt-3.5-turbo',
+            'messages': [
+                {
+                    'role': 'system',
+                    'content': 'Tu esi profesionāls uztura speciālists ar plašu pieredzi ēdienkārtu izveidē un uztura ieteikumos. Atbildi vienmēr latviešu valodā.'
+                },
+                {
+                    'role': 'user',
+                    'content': prompt
+                }
+            ],
+            'max_tokens': 1500,
+            'temperature': 0.7
+        }
+        
+        response = requests.post(
+            'https://api.openai.com/v1/chat/completions',
+            headers=headers,
+            json=data,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            meal_plan = result['choices'][0]['message']['content']
+            return {'meal_plan': meal_plan, 'success': True}
+        else:
+            error_msg = f"ChatGPT API error: {response.status_code} - {response.text}"
+            logging.error(error_msg)
+            return {'error': error_msg, 'success': False}
+            
+    except requests.exceptions.Timeout:
+        return {'error': 'ChatGPT API timeout. Please try again.', 'success': False}
+    except requests.exceptions.RequestException as e:
+        return {'error': f'Network error: {str(e)}', 'success': False}
+    except Exception as e:
+        logging.error(f"Unexpected error in ChatGPT integration: {str(e)}")
+        return {'error': f'Unexpected error: {str(e)}', 'success': False}
 
 def load_products_from_db():
     """Загружает продукты из базы данных"""
@@ -185,6 +280,53 @@ def optimize_diet():
         'norms': {nut: round(norms[nut], 2) for nut in norms},
         'period': period,
         'status': LpStatus[status]
+    })
+
+@app.route('/meal-plan', methods=['POST'])
+def generate_meal_plan():
+    """Генерирует план питания с помощью ChatGPT на основе оптимизированной диеты"""
+    data = request.json
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Invalid input: JSON object required'}), 400
+
+    # Сначала получаем оптимизированную диету
+    diet_response = optimize_diet()
+    if isinstance(diet_response, tuple):  # Если есть ошибка
+        return diet_response
+    
+    diet_data = diet_response.get_json()
+    
+    if 'error' in diet_data:
+        return jsonify(diet_data), 400
+    
+    # Подготавливаем информацию о пользователе
+    user_info = {
+        'gender': data.get('gender', 'male'),
+        'weight': data.get('weight', 70),
+        'height': data.get('height', 175),
+        'age': data.get('age', 30),
+        'activity': data.get('activity', 'moderate'),
+        'period': data.get('period', 'day')
+    }
+    
+    # Генерируем план питания с помощью ChatGPT
+    meal_plan_result = generate_meal_plan_with_chatgpt(diet_data, user_info)
+    
+    if not meal_plan_result.get('success', False):
+        return jsonify({
+            'error': 'Failed to generate meal plan',
+            'details': meal_plan_result.get('error', 'Unknown error')
+        }), 500
+    
+    # Возвращаем комбинированный результат
+    return jsonify({
+        'diet': diet_data['diet'],
+        'total_cost': diet_data['total_cost'],
+        'nutrient_totals': diet_data['nutrient_totals'],
+        'norms': diet_data['norms'],
+        'period': diet_data['period'],
+        'status': diet_data['status'],
+        'meal_plan': meal_plan_result['meal_plan']
     })
 
 if __name__ == '__main__':
