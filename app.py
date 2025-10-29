@@ -240,6 +240,7 @@ def optimize_diet():
 
     # Filter products by allergens
     available_foods = []
+    excluded_by_allergen = []
     for food in foods:
         # Check each allergen
         skip_food = False
@@ -261,10 +262,12 @@ def optimize_diet():
             key = str(allergen or '').strip().lower()
             if key == 'lactose' and food['has_lactose']:
                 skip_food = True
+                excluded_by_allergen.append({'name': food['name'], 'reason': 'lactose'})
                 break
             patterns = allergen_map.get(key, [])
             if patterns and any(p in food_allergens_norm for p in patterns):
                 skip_food = True
+                excluded_by_allergen.append({'name': food['name'], 'reason': key})
                 break
         if not skip_food:
             available_foods.append(food)
@@ -287,23 +290,51 @@ def optimize_diet():
         return jsonify({'error': 'No foods available after applying restrictions'})
 
     model = LpProblem("Budget_Diet_Optimization", LpMinimize)
-    # Limit max 300g per product per day and ≤1000g per week to promote variety
+    # Safe solver variable names and per-product caps
     per_product_weekly_cap_units = 10 if period_days == 7 else 3
-    x = {f['name']: LpVariable(f"{f['name']}", lowBound=0, upBound=min(3 * period_days, per_product_weekly_cap_units)) for f in available_foods}
-    model += lpSum(f['price_per_100g'] * x[f['name']] for f in available_foods), "Total_Cost"
+
+    def make_safe_var(name: str) -> str:
+        base = ''.join(ch if ch.isalnum() else '_' for ch in name)
+        base = base.strip('_') or 'var'
+        return base
+
+    name_to_var = {}
+    used = set()
+    for f in available_foods:
+        candidate = make_safe_var(f['name'])
+        v = candidate
+        idx = 2
+        while v in used:
+            v = f"{candidate}_{idx}"
+            idx += 1
+        used.add(v)
+        name_to_var[f['name']] = v
+
+    x_vars = {name_to_var[f['name']]: LpVariable(name_to_var[f['name']], lowBound=0, upBound=min(3 * period_days, per_product_weekly_cap_units)) for f in available_foods}
+    x_by_name = {f['name']: x_vars[name_to_var[f['name']]] for f in available_foods}
+
+    # Objective: price + small health-aware nudges
+    # price term dominates, nudges push away from sweets/refined grains and toward vegetables/whole grains/legumes
+    price_term = lpSum(f['price_per_100g'] * x_by_name[f['name']] for f in available_foods)
 
     for nut in nut_keys:
-        model += lpSum(f[nut] * x[f['name']] for f in available_foods) >= norms[nut], f"Min_{nut}"
+        model += lpSum(f[nut] * x_by_name[f['name']] for f in available_foods) >= norms[nut], f"Min_{nut}"
     for nut in ['protein', 'fat', 'carbs', 'kcal', 'kj']:
         if nut in norms_upper:
-            model += lpSum(f[nut] * x[f['name']] for f in available_foods) <= norms_upper[nut], f"Max_{nut}"
+            model += lpSum(f[nut] * x_by_name[f['name']] for f in available_foods) <= norms_upper[nut], f"Max_{nut}"
 
-    # WHO: limit free sugar to ≤50g/day; here we cap pure sugar product 'Cukurs' (100g per unit)
-    if 'Cukurs' in x:
+    # WHO: limit free sugar to ≤50g/day; cap pure sugar product 'Cukurs' (100g per unit)
+    cukurs_names = []
+    for n in x_by_name.keys():
+        norm = ''.join(c for c in unicodedata.normalize('NFKD', n.lower()) if not unicodedata.combining(c))
+        if 'cukurs' in norm:
+            cukurs_names.append(n)
+    if cukurs_names:
+        cukurs_total_units = lpSum(x_by_name[n] for n in cukurs_names)
         if bool(data.get('no_added_sugar', False)):
-            model += x['Cukurs'] == 0.0, "No_Added_Sugar_Cukurs"
+            model += cukurs_total_units == 0.0, "No_Added_Sugar_Cukurs"
         else:
-            model += x['Cukurs'] <= 0.5 * period_days, "Max_Added_Sugar_Cukurs"
+            model += cukurs_total_units <= 0.5 * period_days, "Max_Added_Sugar_Cukurs"
 
     # Categorize foods by keywords for realistic constraints
     names = {f['name'] for f in available_foods}
@@ -330,75 +361,93 @@ def optimize_diet():
     red_meat = in_names(['liellopu', 'cuka', 'tela', 'aita', 'jera', 'cukas'])
     processed_meat = in_names(['desa', 'skink', 'cisin', 'zavet'])
     sweets = in_names(['sokolade', 'konfekt', 'marmelad', 'cepumi', 'kakao', 'karamel'])
+    potatoes = in_names(['kartupel'])
+    pasta = in_names(['makaroni'])
+
+    # Health-aware nudges in objective (very small weights)
+    nudge_penalty = lpSum(0.01 * x_by_name[n] for n in (sweets + refined_grains)) if (sweets or refined_grains) else 0
+    nudge_reward = lpSum(-0.005 * x_by_name[n] for n in (vegetables + whole_grains + legumes)) if (vegetables or whole_grains or legumes) else 0
+    model += price_term + nudge_penalty + nudge_reward, "Total_Cost_With_Health_Nudges"
 
     # Oils: ≤30g/day (WHO) → 210g/week → 2.1 units/week
     if oils:
-        model += lpSum(x[name] for name in oils) <= (0.3 * period_days), "Max_Oil"
+        model += lpSum(x_by_name[name] for name in oils) <= (0.3 * period_days), "Max_Oil"
 
     # Offal: ≤200g/week → 2 units/week
     if offal:
         if period_days == 7:
-            model += lpSum(x[name] for name in offal) <= 2.0, "Max_Offal_Week"
+            model += lpSum(x_by_name[name] for name in offal) <= 2.0, "Max_Offal_Week"
         else:
-            model += lpSum(x[name] for name in offal) <= 0.3, "Max_Offal_Day"
+            model += lpSum(x_by_name[name] for name in offal) <= 0.3, "Max_Offal_Day"
 
     # Vegetables: ≥400g/day (WHO) → 2800g/week → 28 units/week
     if vegetables:
-        model += lpSum(x[name] for name in vegetables) >= (4.0 * period_days), "Min_Vegetables"
+        model += lpSum(x_by_name[name] for name in vegetables) >= (4.0 * period_days), "Min_Vegetables"
 
     # Fruits: ≥200g/day (practical minimum) → 1400g/week → 14 units/week
     if fruits:
-        model += lpSum(x[name] for name in fruits) >= (2.0 * period_days), "Min_Fruits"
+        model += lpSum(x_by_name[name] for name in fruits) >= (2.0 * period_days), "Min_Fruits"
 
     # Legumes: ≥600g/week → 6 units/week (or 1 unit/day)
     if legumes:
         if period_days == 7:
-            model += lpSum(x[name] for name in legumes) >= 6.0, "Min_Legumes_Week"
+            model += lpSum(x_by_name[name] for name in legumes) >= 6.0, "Min_Legumes_Week"
         else:
-            model += lpSum(x[name] for name in legumes) >= 1.0, "Min_Legumes_Day"
+            model += lpSum(x_by_name[name] for name in legumes) >= 1.0, "Min_Legumes_Day"
 
     # Refined grains: ≤200g/day → 1400g/week → 14 units/week
     if refined_grains:
-        model += lpSum(x[name] for name in refined_grains) <= (2.0 * period_days), "Max_Refined_Grains"
+        model += lpSum(x_by_name[name] for name in refined_grains) <= (2.0 * period_days), "Max_Refined_Grains"
 
     # Whole grains should be ≥ refined grains to encourage healthy choices
     if whole_grains and refined_grains:
-        model += lpSum(x[name] for name in whole_grains) >= lpSum(x[name] for name in refined_grains), "Min_Whole_vs_Refined"
+        model += lpSum(x_by_name[name] for name in whole_grains) >= lpSum(x_by_name[name] for name in refined_grains), "Min_Whole_vs_Refined"
 
     # WHO: red meat ≤500g/week (5 units/week)
     if red_meat:
         if period_days == 7:
-            model += lpSum(x[name] for name in red_meat) <= 5.0, "Max_Red_Meat_Week"
+            model += lpSum(x_by_name[name] for name in red_meat) <= 5.0, "Max_Red_Meat_Week"
         else:
-            model += lpSum(x[name] for name in red_meat) <= 0.7, "Max_Red_Meat_Day"
+            model += lpSum(x_by_name[name] for name in red_meat) <= 0.7, "Max_Red_Meat_Day"
 
     # WHO: processed meat ideally 0; enforce zero consumption
     if processed_meat:
-        model += lpSum(x[name] for name in processed_meat) == 0.0, "No_Processed_Meat"
+        model += lpSum(x_by_name[name] for name in processed_meat) == 0.0, "No_Processed_Meat"
 
     # Limit sweets (chocolate/candies/cookies/cocoa) to ≤100g/day → 1 unit/day
     if sweets:
-        model += lpSum(x[name] for name in sweets) <= (1.0 * period_days), "Max_Sweets"
+        model += lpSum(x_by_name[name] for name in sweets) <= (1.0 * period_days), "Max_Sweets"
 
-    # Skip combined fats and animal fats categories entirely (removed by request)
+    # Optional caps to avoid over-reliance on cheap starches
+    if potatoes:
+        if period_days == 7:
+            model += lpSum(x_by_name[name] for name in potatoes) <= 7.0, "Max_Potatoes_Week"
+        else:
+            model += lpSum(x_by_name[name] for name in potatoes) <= 1.0, "Max_Potatoes_Day"
+    if pasta:
+        if period_days == 7:
+            model += lpSum(x_by_name[name] for name in pasta) <= 7.0, "Max_Pasta_Week"
+        else:
+            model += lpSum(x_by_name[name] for name in pasta) <= 1.0, "Max_Pasta_Day"
+
 
     # Additional public-health aligned constraints (add only if applicable):
-    # AHA: fish at least 2 servings/week (~300-450g/week)
+    # AHA: fish at least ~450g/week (two ~225g servings)
     if not vegetarian_flag and fish:
         if period_days == 7:
-            model += lpSum(x[name] for name in fish) >= 3.0, "Min_Fish_Week"
+            model += lpSum(x_by_name[name] for name in fish) >= 4.5, "Min_Fish_Week"
         else:
-            model += lpSum(x[name] for name in fish) >= 0.5, "Min_Fish_Day"
+            model += lpSum(x_by_name[name] for name in fish) >= 0.7, "Min_Fish_Day"
 
     # Ensure presence of animal protein (meat/poultry/fish) unless vegetarian
     if not vegetarian_flag and (red_meat or poultry or fish):
         animal_groups = []
         if red_meat:
-            animal_groups.append(lpSum(x[name] for name in red_meat))
+            animal_groups.append(lpSum(x_by_name[name] for name in red_meat))
         if poultry:
-            animal_groups.append(lpSum(x[name] for name in poultry))
+            animal_groups.append(lpSum(x_by_name[name] for name in poultry))
         if fish:
-            animal_groups.append(lpSum(x[name] for name in fish))
+            animal_groups.append(lpSum(x_by_name[name] for name in fish))
         if animal_groups:
             min_units = 3.0 if period_days == 7 else 0.5
             model += lpSum(animal_groups) >= min_units, "Min_Animal_Protein"
@@ -407,9 +456,9 @@ def optimize_diet():
     if not vegetarian_flag and (poultry or red_meat):
         land_groups = []
         if poultry:
-            land_groups.append(lpSum(x[name] for name in poultry))
+            land_groups.append(lpSum(x_by_name[name] for name in poultry))
         if red_meat:
-            land_groups.append(lpSum(x[name] for name in red_meat))
+            land_groups.append(lpSum(x_by_name[name] for name in red_meat))
         if land_groups:
             min_land_units = 3.0 if period_days == 7 else 0.5
             model += lpSum(land_groups) >= min_land_units, "Min_Land_Animal_Protein"
@@ -423,14 +472,29 @@ def optimize_diet():
         if LpStatus[status] == 'Infeasible':
             error_msg['details'] = 'Infeasible constraints. Possible issues:'
             for nut in nut_keys:
-                total = sum(f[nut] * value(x[f['name']]) for f in available_foods)
+                total = sum(f[nut] * value(x_by_name[f['name']]) for f in available_foods)
                 if total < norms[nut]:
                     error_msg['details'] += f" {nut} ({total:.2f} < {norms[nut]:.2f})"
         return jsonify(error_msg)
 
-    diet = {name: round(value(x[name]) * 100, 2) for name in x if value(x[name]) > 0}
+    diet = {name: round(value(x_by_name[name]) * 100, 2) for name in x_by_name if value(x_by_name[name]) > 0}
     total_cost = round(value(model.objective), 2)
-    nutrient_totals = {nut: round(sum(f[nut] * value(x[f['name']]) for f in available_foods), 2) for nut in nut_keys}
+    nutrient_totals = {nut: round(sum(f[nut] * value(x_by_name[f['name']]) for f in available_foods), 2) for nut in nut_keys}
+
+    # Coverage block (grams per category)
+    def sum_grams(group):
+        return round(sum(value(x_by_name[n]) * 100 for n in group if n in x_by_name), 2)
+    coverage = {
+        'fish': sum_grams(fish),
+        'poultry': sum_grams(poultry),
+        'red_meat': sum_grams(red_meat),
+        'whole_grains': sum_grams(whole_grains),
+        'refined_grains': sum_grams(refined_grains),
+        'vegetables': sum_grams(vegetables),
+        'fruits': sum_grams(fruits),
+        'legumes': sum_grams(legumes),
+        'sweets': sum_grams(sweets)
+    }
 
     return jsonify({
         'diet': diet,
@@ -438,7 +502,9 @@ def optimize_diet():
         'nutrient_totals': nutrient_totals,
         'norms': {nut: round(norms[nut], 2) for nut in norms},
         'period': period,
-        'status': LpStatus[status]
+        'status': LpStatus[status],
+        'coverage': coverage,
+        'excluded_by_allergen': excluded_by_allergen
     })
 
 @app.route('/meal-plan', methods=['POST'])

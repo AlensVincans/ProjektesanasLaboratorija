@@ -4,7 +4,7 @@ This service optimizes a weekly diet (default) while enforcing public-health and
 
 ### Energy and Macronutrients (EFSA-based)
 - Protein: ≥ 0.83 g/kg/day (scaled to period)
-- Fat: 20–35% of energy (scaled to period)
+- Fat: 20–30% of energy (scaled to period)
 - Carbs: 45–60% of energy (scaled to period)
 - Calories: around EER, with +10% upper cap (scaled)
 - kJ scaled accordingly
@@ -25,8 +25,20 @@ Vitamins and minerals currently modeled as daily norms, not scaled (A, B1, B2, P
 - Red meat: ≤ 500 g/week
 - Processed meat: 0 (none)
 - Sweets (chocolate/candies/cookies/cocoa): ≤ 100 g/day
-- Fish (AHA guidance): ≥ ~300–450 g/week (enforced as ≥ 300 g/week)
+- Fish (AHA guidance): ≥ ~300–450 g/week (enforced as ≥ 450 g/week)
 - Animal protein presence (unless vegetarian): ≥ 300 g/week from meat/poultry/fish combined
+
+### Health-aware Objective Nudges
+- Primary objective is cost minimization.
+- Small penalties for sweets and refined grains.
+- Small rewards for vegetables, whole grains, and legumes.
+
+### Optional Caps to Avoid Over-Reliance
+- Potatoes: ≤ 700 g/week (≤ 100 g/day if daily period).
+- Pasta: ≤ 700 g/week (≤ 100 g/day if daily period).
+
+### Transparency
+- Response includes `coverage` (grams per category) and `excluded_by_allergen` (list of filtered items and reasons).
 
 ### Vegetarian Option
 To request a vegetarian diet, set one of the following in the POST body:

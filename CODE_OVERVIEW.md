@@ -20,12 +20,13 @@ This document explains the core modules, endpoints, optimization model, constrai
 - Default period is `week` (7 days). Vitamins/minerals remain daily norms; energy nutrients (protein, fat, carbs, kcal, kJ) are scaled by period days.
 
 ### Objective
-- Minimize total monetary cost: sum(price_per_100g * x_i).
+- Minimize total monetary cost: sum(price_per_100g * x_i), with small health-aware nudges (penalize sweets/refined grains; reward vegetables/whole grains/legumes).
 
 ### Core Constraints
 - Nutrient minimums (EFSA-derived): protein, fat, carbs, kcal, kJ (scaled to period), plus selected vitamins/minerals as daily norms.
 - Nutrient maximums: kcal, kJ, carbs, fat (fat upper set to 30% energy), protein (upper bandwidth), all scaled.
 - Variety caps: per-product ≤ 300 g/day and ≤ 1000 g/week.
+- Optional caps: potatoes ≤ 700 g/week; pasta ≤ 700 g/week.
 - Allergen filtering: lactose/milk/gluten/eggs/soy/nuts/sesame/sulfites/fish (normalized matching).
 - Lifestyle/health guidance (WHO/AHA):
   - Free sugar (product `Cukurs`) ≤ 50 g/day; or 0 if `no_added_sugar=true`.
@@ -33,11 +34,12 @@ This document explains the core modules, endpoints, optimization model, constrai
   - Vegetables ≥ 400 g/day; fruits ≥ 200 g/day; legumes ≥ 600 g/week.
   - Refined grains ≤ 200 g/day; whole grains ≥ refined grains.
   - Red meat ≤ 500 g/week; processed meat = 0.
-  - Fish ≥ ~300 g/week; animal protein presence (meat/poultry/fish) ≥ 300 g/week unless vegetarian.
+  - Fish ≥ ~450 g/week; animal protein presence (meat/poultry/fish) ≥ 300 g/week unless vegetarian.
 - Vegetarian option: removes meat/fish/offal/processed meat from the domain.
 
-### Categorization
+### Categorization and Variables
 - Product names are normalized (lowercased, diacritics removed) and matched with keyword lists to build categories (oils, grains, legumes, vegetables, fruits, offal, red meat, fish, poultry, sweets, etc.).
+- Solver variables use safe identifiers mapped from product names; response keeps original names.
 
 ### ChatGPT Integration
 - `generate_meal_plan_with_chatgpt()` reads `OPENAI_API_KEY`, posts a structured prompt with the optimized diet, returns the generated plan.
@@ -50,5 +52,6 @@ This document explains the core modules, endpoints, optimization model, constrai
 - Add nutrients or constraints: extend `nut_keys`, update norms/upper-bounds, add model constraints.
 - Add categories: extend keyword lists in the categorization block.
 - Add allergens: extend `allergen_map` in `optimize_diet()`.
+- Add coverage fields: extend the `coverage` dict aggregation.
 
 
