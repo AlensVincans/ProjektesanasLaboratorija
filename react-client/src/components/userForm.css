@@ -1,0 +1,136 @@
+/* ==== SCOPED стили ТОЛЬКО для UserForm ==== */
+/* Оборачиваем в .userform, чтобы не «залить» весь проект */
+.userform { color: #111827; }
+
+/* Карточка формы */
+.userform.card {
+  background: #fff;
+  border: 1px solid #eef0f3;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 16px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+
+/* Заголовки внутри формы */
+.userform h2 {
+  margin: 0 0 .75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+.userform h3 { margin: .5rem 0; font-size: 1.125rem; font-weight: 600; }
+
+/* Сетки */
+.userform .grid1 { display: grid; gap: 12px; margin-top: 12px; }
+.userform .grid2 {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 640px) {
+  .userform .grid2 { grid-template-columns: 1fr; }
+}
+
+/* Поля формы */
+.userform label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+.userform input[type="number"],
+.userform input[type="text"],
+.userform select {
+  appearance: none;
+  width: 100%;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: border .15s ease, box-shadow .15s ease;
+}
+.userform input:focus,
+.userform select:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17,24,39,.08);
+}
+
+/* Кнопки */
+.userform button {
+  border: 0;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 600;
+  transition: transform .05s ease, opacity .15s ease, box-shadow .15s ease;
+}
+.userform button:disabled { opacity: .55; cursor: not-allowed; }
+
+.userform .primary { background: #111827; color: #fff; }
+.userform .primary:hover { opacity: .9; }
+.userform .primary:active { transform: translateY(1px); }
+
+.userform .secondary { background: #fff; color: #111827; border: 1px solid #d1d5db; }
+.userform .secondary:hover { border-color: #9ca3af; }
+.userform .secondary:active { transform: translateY(1px); }
+
+/* Сообщения */
+.userform .muted   { color: #6b7280; font-size: 12px; }
+.userform .error   {
+  background: #fef2f2; color: #991b1b;
+  border: 1px solid #fecaca; border-radius: 12px;
+  padding: 10px 12px;
+}
+.userform .success {
+  background: #ecfdf5; color: #065f46;
+  border: 1px solid #a7f3d0; border-radius: 12px;
+  padding: 10px 12px;
+}
+
+/* TagInput (аллергены / нелюбимые) */
+.userform .tag-input { position: relative; }
+.userform .tags {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px;
+}
+.userform .tags input {
+  border: 0; outline: none; background: transparent;
+  min-width: 140px; flex: 1; font-size: 14px; padding: 6px 4px;
+}
+.userform .tag {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  font-size: 13px;
+  user-select: none;
+  cursor: pointer;
+}
+.userform .tag:hover { background: #e5e7eb; }
+
+.userform .dropdown {
+  position: absolute; left: 0; right: 0; margin-top: 6px;
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+  box-shadow: 0 12px 24px rgba(0,0,0,.08);
+  max-height: 260px; overflow: auto; z-index: 10;
+}
+.userform .dropdown-item {
+  padding: 10px 12px; font-size: 14px; cursor: pointer;
+}
+.userform .dropdown-item:hover { background: #f9fafb; }
+.userform .dropdown-item.muted { color: #6b7280; }
+
+/* Таблицы (если рисуешь таблицу рациона в этом компоненте) */
+.userform table { border-collapse: separate; border-spacing: 0 8px; }
+.userform th { font-weight: 500; font-size: 13px; color: #6b7280; }
+.userform td, .userform th { padding: 10px 12px; }
+.userform tr { background: #f9fafb; border-radius: 12px; }
