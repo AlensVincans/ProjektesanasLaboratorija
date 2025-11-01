@@ -1,136 +1,505 @@
-/* ==== SCOPED стили ТОЛЬКО для UserForm ==== */
-/* Оборачиваем в .userform, чтобы не «залить» весь проект */
-.userform { color: #111827; }
+/* ============================================
+   UserForm.css - Модные стили для анкеты
+   ============================================ */
 
-/* Карточка формы */
-.userform.card {
-  background: #fff;
-  border: 1px solid #eef0f3;
-  border-radius: 16px;
-  padding: 20px;
-  margin: 16px 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+/* Общие стили для карточек */
+.user-form.card {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 20px;
+  padding: 32px;
+  margin: 24px auto;
+  max-width: 1200px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 
+              0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Заголовки внутри формы */
-.userform h2 {
-  margin: 0 0 .75rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: -.02em;
+.user-form.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  z-index: 0;
 }
-.userform h3 { margin: .5rem 0; font-size: 1.125rem; font-weight: 600; }
+
+.user-form.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12),
+              0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.user-form.card h2 {
+  margin: 0 0 24px 0;
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.user-form.card h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 2px;
+}
 
 /* Сетки */
-.userform .grid1 { display: grid; gap: 12px; margin-top: 12px; }
-.userform .grid2 {
+.user-form .grid2 {
   display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-@media (max-width: 640px) {
-  .userform .grid2 { grid-template-columns: 1fr; }
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
-/* Поля формы */
-.userform label {
+.user-form .grid1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Лейблы */
+.user-form label {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 14px;
-  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #2d3748;
+  position: relative;
 }
-.userform input[type="number"],
-.userform input[type="text"],
-.userform select {
-  appearance: none;
+
+/* Инпуты */
+.user-form input[type="number"],
+.user-form select {
   width: 100%;
-  border: 1px solid #d1d5db;
-  background: #fff;
+  padding: 14px 16px;
+  font-size: 1rem;
+  font-family: inherit;
+  border: 2px solid #e2e8f0;
   border-radius: 12px;
-  padding: 10px 12px;
-  font-size: 14px;
+  background: #ffffff;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
-  transition: border .15s ease, box-shadow .15s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
-.userform input:focus,
-.userform select:focus {
-  border-color: #111827;
-  box-shadow: 0 0 0 3px rgba(17,24,39,.08);
+
+.user-form input[type="number"]:focus,
+.user-form select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1),
+              0 4px 12px rgba(102, 126, 234, 0.15);
+  transform: translateY(-2px);
+}
+
+.user-form input[type="number"]:hover:not(:focus),
+.user-form select:hover:not(:focus) {
+  border-color: #cbd5e0;
+}
+
+.user-form input[type="number"]::placeholder {
+  color: #a0aec0;
+}
+
+/* Селекты */
+.user-form select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236676ea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+
+.user-form select option {
+  padding: 12px;
+  font-size: 1rem;
+  background: #ffffff;
+  color: #2d3748;
 }
 
 /* Кнопки */
-.userform button {
-  border: 0;
-  cursor: pointer;
-  font-size: 14px;
-  border-radius: 12px;
-  padding: 10px 16px;
+.user-form button {
+  padding: 14px 28px;
+  font-size: 1rem;
   font-weight: 600;
-  transition: transform .05s ease, opacity .15s ease, box-shadow .15s ease;
-}
-.userform button:disabled { opacity: .55; cursor: not-allowed; }
-
-.userform .primary { background: #111827; color: #fff; }
-.userform .primary:hover { opacity: .9; }
-.userform .primary:active { transform: translateY(1px); }
-
-.userform .secondary { background: #fff; color: #111827; border: 1px solid #d1d5db; }
-.userform .secondary:hover { border-color: #9ca3af; }
-.userform .secondary:active { transform: translateY(1px); }
-
-/* Сообщения */
-.userform .muted   { color: #6b7280; font-size: 12px; }
-.userform .error   {
-  background: #fef2f2; color: #991b1b;
-  border: 1px solid #fecaca; border-radius: 12px;
-  padding: 10px 12px;
-}
-.userform .success {
-  background: #ecfdf5; color: #065f46;
-  border: 1px solid #a7f3d0; border-radius: 12px;
-  padding: 10px 12px;
-}
-
-/* TagInput (аллергены / нелюбимые) */
-.userform .tag-input { position: relative; }
-.userform .tags {
-  display: flex; flex-wrap: wrap; gap: 8px;
-  border: 1px solid #d1d5db;
+  border: none;
   border-radius: 12px;
-  background: #fff;
-  padding: 8px;
-}
-.userform .tags input {
-  border: 0; outline: none; background: transparent;
-  min-width: 140px; flex: 1; font-size: 14px; padding: 6px 4px;
-}
-.userform .tag {
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  color: #111827;
-  padding: 6px 10px;
-  border-radius: 9999px;
-  font-size: 13px;
-  user-select: none;
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  text-transform: none;
 }
-.userform .tag:hover { background: #e5e7eb; }
 
-.userform .dropdown {
-  position: absolute; left: 0; right: 0; margin-top: 6px;
-  background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
-  box-shadow: 0 12px 24px rgba(0,0,0,.08);
-  max-height: 260px; overflow: auto; z-index: 10;
+.user-form button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
 }
-.userform .dropdown-item {
-  padding: 10px 12px; font-size: 14px; cursor: pointer;
-}
-.userform .dropdown-item:hover { background: #f9fafb; }
-.userform .dropdown-item.muted { color: #6b7280; }
 
-/* Таблицы (если рисуешь таблицу рациона в этом компоненте) */
-.userform table { border-collapse: separate; border-spacing: 0 8px; }
-.userform th { font-weight: 500; font-size: 13px; color: #6b7280; }
-.userform td, .userform th { padding: 10px 12px; }
-.userform tr { background: #f9fafb; border-radius: 12px; }
+.user-form button:hover::before {
+  left: 100%;
+}
+
+.user-form button:active {
+  transform: scale(0.98);
+}
+
+.user-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.user-form button.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+}
+
+.user-form button.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 6px 24px rgba(102, 126, 234, 0.5);
+  transform: translateY(-2px);
+}
+
+.user-form button.secondary {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(245, 87, 108, 0.4);
+}
+
+.user-form button.secondary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+  box-shadow: 0 6px 24px rgba(245, 87, 108, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Tag Input */
+.tag-input {
+  position: relative;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  min-height: 50px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tags:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1),
+              0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.tags input {
+  border: none;
+  padding: 8px 4px;
+  background: transparent;
+  flex: 1;
+  min-width: 120px;
+  font-size: 1rem;
+  outline: none;
+  box-shadow: none;
+}
+
+.tags input:focus {
+  transform: none;
+  border: none;
+}
+
+.tags input::placeholder {
+  color: #a0aec0;
+  font-style: italic;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.tag::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.2);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tag:hover::before {
+  opacity: 1;
+}
+
+.tag:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Dropdown */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(90deg, #667eea15, transparent);
+  padding-left: 20px;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.dropdown-item.muted {
+  color: #718096;
+  font-style: italic;
+}
+
+.dropdown-item.muted:hover {
+  background: linear-gradient(90deg, #71809615, transparent);
+}
+
+/* Статусные сообщения */
+.error {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+  border: 2px solid #fc8181;
+  border-radius: 12px;
+  color: #c53030;
+  font-weight: 500;
+  font-size: 0.95rem;
+  animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes shake {
+  10%, 90% { transform: translateX(-4px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.success {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #f0fff4 0%, #dcfce7 100%);
+  border: 2px solid #68d391;
+  border-radius: 12px;
+  color: #2f855a;
+  font-weight: 500;
+  font-size: 0.95rem;
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.success b {
+  font-size: 1.1rem;
+  color: #22543d;
+  font-weight: 700;
+}
+
+.muted {
+  color: #718096;
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .user-form.card {
+    padding: 24px;
+    margin: 16px;
+    border-radius: 16px;
+  }
+
+  .user-form.card h2 {
+    font-size: 1.5rem;
+  }
+
+  .user-form .grid2 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .user-form button {
+    width: 100%;
+    padding: 16px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-form.card {
+    padding: 20px;
+    margin: 12px;
+  }
+
+  .user-form.card h2 {
+    font-size: 1.3rem;
+    padding-bottom: 8px;
+  }
+
+  .user-form input[type="number"],
+  .user-form select {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+
+  .tags input {
+    min-width: 100px;
+    font-size: 0.95rem;
+  }
+
+  .tag {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+}
+
+/* Дополнительные эффекты */
+.user-form.card > div:last-child {
+  position: relative;
+}
+
+/* Плавная загрузка */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.user-form button:disabled {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Кастомный скроллбар для dropdown */
+.dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.dropdown::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #667eea, #764ba2);
+  border-radius: 4px;
+}
+
+.dropdown::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #764ba2, #667eea);
+}
+
+/* Улучшенный контраст и доступность */
+.user-form input[type="number"]:focus-visible,
+.user-form select:focus-visible,
+.user-form button:focus-visible {
+  outline: 3px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Анимации для интерактивности */
+@media (prefers-reduced-motion: no-preference) {
+  .user-form.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .user-form button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
