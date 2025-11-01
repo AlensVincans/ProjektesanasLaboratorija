@@ -1,0 +1,97 @@
+.product-list {
+  overflow: hidden;
+}
+
+.product-list h3 {
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.product-list .table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.product-list .table th,
+.product-list .table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.product-list .table thead th {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(0deg, #ffffff, #fafafa);
+  z-index: 1;
+  text-align: left;
+  font-weight: 600;
+  color: #39424e;
+  font-size: 0.92rem;
+}
+
+.product-list .table tbody tr:nth-child(even) td {
+  background: #fcfcfd;
+}
+
+.product-list .table tbody tr:hover td {
+  background: #f5f7fb;
+}
+
+.product-list .table td:nth-child(2),
+.product-list .table td:nth-child(3),
+.product-list .table td:nth-child(4),
+.product-list .table td:nth-child(5),
+.product-list .table td:nth-child(6),
+.product-list .table td:nth-child(7) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.product-list .table td b {
+  font-weight: 600;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #eef4ff;
+  color: #274cdb;
+}
+
+.product-list .muted {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+/* Карточка сводки нутриентов внутри ProductList */
+.product-list .card h4 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+}
+
+.product-list .card .grid2 > div:first-child div {
+  margin: 6px 0;
+}
+
+/* Небольшие скругления самой внутренней карточке */
+.product-list .card {
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 720px) {
+  .product-list .table th,
+  .product-list .table td {
+    padding: 6px 8px;
+  }
+  .product-list h3 {
+    font-size: 1rem;
+  }
+  .product-list .table thead th {
+    font-size: 0.88rem;
+  }
+}
+
+

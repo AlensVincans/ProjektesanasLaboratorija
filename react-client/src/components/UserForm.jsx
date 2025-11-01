@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import ProductList from "./ProductList";
+import "./UserForm.css";
 
 const activityOptions = [
   { value: "low", label: "Низкая" },
@@ -148,7 +150,7 @@ export default function UserForm() {
 
     // считаем TDEE
     try {
-      const resp = await fetch("/tdee", {
+      const resp = await fetch("http://localhost:5000/tdee", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -178,7 +180,7 @@ export default function UserForm() {
     setDiet(null);
 
     try {
-      const resp = await fetch("/optimize", {
+      const resp = await fetch("http://localhost:5000/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -203,7 +205,7 @@ export default function UserForm() {
   };
 
   return (
-    <div className="card">
+    <div className="user-form card">
       <h2>Анкета</h2>
       <div className="grid2">
         <label>
@@ -285,28 +287,7 @@ export default function UserForm() {
       )}
 
       {optErr && <div className="error" style={{ marginTop: 8 }}>{optErr}</div>}
-      {diet && (
-        <div className="card" style={{ marginTop: 12 }}>
-          <h3>Предложенный рацион ({diet.period === "week" ? "г/день на неделю" : "г/день"})</h3>
-          {Object.keys(diet.diet || {}).length === 0 ? (
-            <div className="muted">Рацион пуст — попробуй изменить параметры.</div>
-          ) : (
-            <ul>
-              {Object.entries(diet.diet).map(([name, grams]) => (
-                <li key={name}>
-                  {name}: <b>{grams}</b> г
-                </li>
-              ))}
-            </ul>
-          )}
-          <div style={{ marginTop: 8 }}>
-            Итоговая стоимость: <b>{diet.total_cost}</b>
-          </div>
-          <div className="muted" style={{ marginTop: 4 }}>
-            Статус решения: {diet.status}
-          </div>
-        </div>
-      )}
+      {diet && <ProductList diet={diet} />}
     </div>
   );
 }
