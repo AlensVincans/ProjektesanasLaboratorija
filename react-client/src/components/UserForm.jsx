@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ProductList from "./ProductList";
-import "./UserForm.css";
+import "./userForm.css";
 
 const activityOptions = [
   { value: "low", label: "Низкая" },

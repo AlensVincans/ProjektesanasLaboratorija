@@ -1,5 +1,5 @@
 import React from "react";
-import "./ProductList.css";
+import "./productList.css";
 
 export default function ProductList({ diet }) {
   if (!diet) return null;
