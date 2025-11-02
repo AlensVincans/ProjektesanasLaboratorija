@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import ProductList from "./ProductList";
+import "./UserForm.css";
 
 const activityOptions = [
   { value: "low", label: "Низкая" },
@@ -203,7 +205,7 @@ export default function UserForm() {
   };
 
   return (
-    <div className="card">
+    <div className="user-form card">
       <h2>Анкета</h2>
       <div className="grid2">
         <label>
