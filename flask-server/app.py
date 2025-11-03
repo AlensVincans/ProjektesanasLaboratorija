@@ -17,11 +17,9 @@ CORS(app)
 logging.basicConfig(level=logging.DEBUG)
 
 ACTIVITY_MULTIPLIERS = {
-    "sedentary": 1.4,
-    "low": 1.6,
-    "moderate": 1.8,
-    "active": 1.9,
-    "very active": 2.0
+    "low": 1.2,
+    "moderate": 1.55,
+    "high": 1.725
 }
 
 def calculate_bmr(gender, weight, height, age):
