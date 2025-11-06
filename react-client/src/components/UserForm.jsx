@@ -5,7 +5,7 @@ import "./userForm.css";
 const activityOptions = [
   { value: "low", label: "Низкая" },
   { value: "moderate", label: "Умеренная" },
-  { value: "high", label: "Высокая" },
+  { value: "active", label: "Активная" },
 ];
 
 // компонент ввода тегов (для аллергенов и нелюбимых продуктов)
@@ -96,6 +96,11 @@ export default function UserForm() {
   const [optLoading, setOptLoading] = useState(false);
   const [optErr, setOptErr] = useState("");
   const [diet, setDiet] = useState(null); // { diet, total_cost, nutrient_totals, norms, period, status }
+  
+  // результат генерации плана питания
+  const [mealPlanLoading, setMealPlanLoading] = useState(false);
+  const [mealPlanErr, setMealPlanErr] = useState("");
+  const [mealPlan, setMealPlan] = useState(null); // { diet, meal_plan, ... }
 
   const commonFood = ["Молоко","Глютен","Арахис","Курица","Рыба","Яйцо","Орехи","Рис","Яблоко"];
 
@@ -178,6 +183,7 @@ export default function UserForm() {
     setOptLoading(true);
     setOptErr("");
     setDiet(null);
+    setMealPlan(null); // Clear meal plan when optimizing again
 
     try {
       const resp = await fetch("http://localhost:5000/optimize", {
@@ -201,6 +207,41 @@ export default function UserForm() {
       setOptErr(String(e.message || e));
     } finally {
       setOptLoading(false);
+    }
+  };
+
+  const generateMealPlan = async () => {
+    const body = makePayload();
+    setMealPlanLoading(true);
+    setMealPlanErr("");
+    setMealPlan(null);
+
+    try {
+      const resp = await fetch("http://localhost:5000/meal-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gender: body.gender,
+          age: body.age,
+          weight: body.weight,
+          height: body.height,
+          activity: body.activity,
+          allergens: body.allergens,
+          period: body.period,
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error || data?.details || `HTTP ${resp.status}`);
+      if (data.error) throw new Error(data.error);
+      setMealPlan(data);
+      // Also update diet if meal plan includes it
+      if (data.diet) {
+        setDiet(data);
+      }
+    } catch (e) {
+      setMealPlanErr(String(e.message || e));
+    } finally {
+      setMealPlanLoading(false);
     }
   };
 
@@ -272,8 +313,12 @@ export default function UserForm() {
           {saving ? "Сохранение…" : "Сохранить и посчитать TDEE"}
         </button>
 
-        <button onClick={optimize} disabled={optLoading} className="secondary">
+        <button onClick={optimize} disabled={optLoading || mealPlanLoading} className="secondary">
           {optLoading ? "Оптимизация…" : "Оптимизировать рацион"}
+        </button>
+
+        <button onClick={generateMealPlan} disabled={mealPlanLoading || optLoading} className="secondary">
+          {mealPlanLoading ? "Генерация плана…" : "Сгенерировать план питания"}
         </button>
 
         {savedMsg && <span className="muted">{savedMsg}</span>}
@@ -287,7 +332,26 @@ export default function UserForm() {
       )}
 
       {optErr && <div className="error" style={{ marginTop: 8 }}>{optErr}</div>}
+      {mealPlanErr && <div className="error" style={{ marginTop: 8 }}>Ошибка генерации плана: {mealPlanErr}</div>}
       {diet && <ProductList diet={diet} />}
+      {mealPlan && mealPlan.meal_plan && (
+        <div className="card" style={{ marginTop: 12 }}>
+          <h3>План питания (ChatGPT)</h3>
+          <div 
+            style={{ 
+              whiteSpace: "pre-wrap", 
+              lineHeight: "1.6",
+              padding: "12px",
+              backgroundColor: "#f9f9f9",
+              borderRadius: "4px",
+              maxHeight: "600px",
+              overflowY: "auto"
+            }}
+          >
+            {mealPlan.meal_plan}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
