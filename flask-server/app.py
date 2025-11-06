@@ -18,8 +18,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 ACTIVITY_MULTIPLIERS = {
     "low": 1.2,
-    "moderate": 1.55,
-    "high": 1.725
+    "moderate": 1.6,
+    "active": 1.9
 }
 
 def calculate_bmr(gender, weight, height, age):
@@ -558,15 +558,29 @@ def generate_meal_plan():
     if not isinstance(data, dict):
         return jsonify({'error': 'Invalid input: JSON object required'}), 400
 
-    # First, compute the optimized diet
-    diet_response = optimize_diet()
-    if isinstance(diet_response, tuple):  # Error path
-        return diet_response
+    # First, compute the optimized diet by calling optimize_diet logic
+    # We need to temporarily store the request data for optimize_diet to use
+    # Since optimize_diet reads from request.json, we'll call it directly
+    # But we need to ensure the request context is available
     
-    diet_data = diet_response.get_json()
+    # Call optimize_diet - it will read from the same request.json
+    from flask import has_request_context
+    if not has_request_context():
+        return jsonify({'error': 'Request context required'}), 500
     
-    if 'error' in diet_data:
-        return jsonify(diet_data), 400
+    # Optimize diet first
+    try:
+        diet_response = optimize_diet()
+        if isinstance(diet_response, tuple):  # Error path
+            return diet_response
+        
+        diet_data = diet_response.get_json()
+        
+        if 'error' in diet_data:
+            return jsonify(diet_data), 400
+    except Exception as e:
+        logging.error(f"Error in optimize_diet: {str(e)}")
+        return jsonify({'error': f'Optimization failed: {str(e)}'}), 500
     
     # Prepare user info
     user_info = {
@@ -588,15 +602,23 @@ def generate_meal_plan():
         }), 500
     
     # Return the combined result
-    return jsonify({
-        'diet': diet_data['diet'],
-        'total_cost': diet_data['total_cost'],
-        'nutrient_totals': diet_data['nutrient_totals'],
-        'norms': diet_data['norms'],
-        'period': diet_data['period'],
-        'status': diet_data['status'],
-        'meal_plan': meal_plan_result['meal_plan']
-    })
+    result = {
+        'diet': diet_data.get('diet', {}),
+        'total_cost': diet_data.get('total_cost', 0),
+        'nutrient_totals': diet_data.get('nutrient_totals', {}),
+        'norms': diet_data.get('norms', {}),
+        'period': diet_data.get('period', 'week'),
+        'status': diet_data.get('status', 'Unknown'),
+        'meal_plan': meal_plan_result.get('meal_plan', '')
+    }
+    
+    # Include items if available
+    if 'items' in diet_data:
+        result['items'] = diet_data['items']
+    if 'coverage' in diet_data:
+        result['coverage'] = diet_data['coverage']
+    
+    return jsonify(result)
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=True)
