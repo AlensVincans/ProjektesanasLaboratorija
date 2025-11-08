@@ -6,22 +6,25 @@ import HomePage from "./pages/HomePage";
 import CalculatorPage from "./pages/CalculatorPage";
 import ResultsPage from "./pages/ResultsPage";
 import AboutPage from "./pages/AboutPage";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
 function App() {
   return (
-    <Router>
-      <div className="app">
-        <Navigation />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/calculator" element={<CalculatorPage />} />
-            <Route path="/results" element={<ResultsPage />} />
-            <Route path="/about" element={<AboutPage />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <LanguageProvider>
+      <Router>
+        <div className="app">
+          <Navigation />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/calculator" element={<CalculatorPage />} />
+              <Route path="/results" element={<ResultsPage />} />
+              <Route path="/about" element={<AboutPage />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </LanguageProvider>
   );
 }
 

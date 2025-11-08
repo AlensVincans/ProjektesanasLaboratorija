@@ -1,79 +1,74 @@
 import React from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 import "./AboutPage.css";
 
 export default function AboutPage() {
+  const { t } = useLanguage();
+  
   return (
     <div className="about-page">
       <div className="page-header">
-        <h1>О нас</h1>
-        <p>Информация о калькуляторе персонального рациона</p>
+        <h1>{t("about.title")}</h1>
+        <p>{t("about.subtitle")}</p>
       </div>
       <div className="page-content">
         <section className="about-section">
-          <h2>Наша миссия</h2>
+          <h2>{t("about.mission")}</h2>
           <p>
-            Мы создали этот калькулятор, чтобы помочь людям составить здоровый и 
-            сбалансированный рацион питания с учетом их индивидуальных потребностей. 
-            Наша цель - сделать правильное питание доступным и понятным для каждого.
+            {t("about.missionText")}
           </p>
         </section>
 
         <section className="about-section">
-          <h2>Как это работает</h2>
+          <h2>{t("about.howItWorks")}</h2>
           <div className="steps">
             <div className="step">
               <div className="step-number">1</div>
-              <h3>Заполните анкету</h3>
+              <h3>{t("about.step1")}</h3>
               <p>
-                Укажите ваши параметры: пол, возраст, вес, рост, уровень физической активности, 
-                аллергены и предпочтения в еде.
+                {t("about.step1Desc")}
               </p>
             </div>
             <div className="step">
               <div className="step-number">2</div>
-              <h3>Расчет TDEE</h3>
+              <h3>{t("about.step2")}</h3>
               <p>
-                Система рассчитывает вашу суточную норму калорий (Total Daily Energy Expenditure) 
-                на основе формулы Миффлина-Сан Жеора.
+                {t("about.step2Desc")}
               </p>
             </div>
             <div className="step">
               <div className="step-number">3</div>
-              <h3>Оптимизация рациона</h3>
+              <h3>{t("about.step3")}</h3>
               <p>
-                Алгоритм оптимизации подбирает оптимальный набор продуктов, учитывая ваши 
-                потребности в калориях, макронутриентах и бюджетные ограничения.
+                {t("about.step3Desc")}
               </p>
             </div>
             <div className="step">
               <div className="step-number">4</div>
-              <h3>Получите результат</h3>
+              <h3>{t("about.step4")}</h3>
               <p>
-                Вы получите детальный план питания с расчетом стоимости, рецепты блюд и 
-                визуализацию данных в виде графиков.
+                {t("about.step4Desc")}
               </p>
             </div>
           </div>
         </section>
 
         <section className="about-section">
-          <h2>Преимущества</h2>
+          <h2>{t("about.benefits")}</h2>
           <ul className="advantages">
-            <li>✅ Индивидуальный подход к каждому пользователю</li>
-            <li>✅ Учет аллергенов и пищевых ограничений</li>
-            <li>✅ Оптимизация стоимости рациона</li>
-            <li>✅ Сбалансированное питание по макронутриентам</li>
-            <li>✅ Подбор рецептов с учетом ваших предпочтений</li>
-            <li>✅ Наглядная визуализация данных</li>
+            <li>✅ {t("about.benefit1")}</li>
+            <li>✅ {t("about.benefit2")}</li>
+            <li>✅ {t("about.benefit3")}</li>
+            <li>✅ {t("about.benefit4")}</li>
+            <li>✅ {t("about.benefit5")}</li>
+            <li>✅ {t("about.benefit6")}</li>
           </ul>
         </section>
 
         <section className="about-section">
-          <h2>Важно помнить</h2>
+          <h2>{t("about.important")}</h2>
           <p>
-            Данный калькулятор предоставляет рекомендации общего характера. Для получения 
-            индивидуальных рекомендаций по питанию, особенно при наличии хронических заболеваний, 
-            рекомендуется проконсультироваться с врачом или диетологом.
+            {t("about.importantText")}
           </p>
         </section>
       </div>

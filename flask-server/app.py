@@ -85,8 +85,13 @@ def generate_meal_plan_with_chatgpt(diet_data, user_info):
         
         products_text = '\n'.join(products_info)
         
-        # Build the prompt in Latvian
-        prompt = f"""
+        # Get language from user_info, default to 'lv' (Latvian)
+        language = user_info.get('language', 'lv')
+        
+        # Build prompts based on language
+        if language == 'lv':
+            # Latvian prompt
+            prompt = f"""
 Tu esi profesionāls uztura speciālists. Izveido detalizētu ēdienkārtu, pamatojoties uz šiem produktiem un to daudzumiem:
 
 PRODUKTI UN DAUDZUMI:
@@ -112,6 +117,36 @@ Formatē atbildi skaidrā, organizētā veidā ar sadaļām katrai maltītei un 
 
 ATBILDEI JĀBŪT LATVIEŠU VALODĀ!
 """
+            system_message = 'Tu esi profesionāls uztura speciālists ar plašu pieredzi ēdienkārtu izveidē un uztura ieteikumos. Atbildi vienmēr latviešu valodā.'
+        else:
+            # English prompt (default)
+            prompt = f"""
+You are a professional nutritionist. Create a detailed meal plan based on these products and their amounts:
+
+PRODUCTS AND AMOUNTS:
+{products_text}
+
+USER INFORMATION:
+- Gender: {user_info.get('gender', 'male')}
+- Weight: {user_info.get('weight', 70)} kg
+- Height: {user_info.get('height', 175)} cm
+- Age: {user_info.get('age', 30)} years
+- Activity level: {user_info.get('activity', 'moderate')}
+- Period: {user_info.get('period', 'day')}
+
+Please create a meal plan that includes:
+1. MEAL DISTRIBUTION (breakfast, lunch, dinner, snacks)
+2. SPECIFIC RECIPES with precise amounts of each product
+3. MEAL TIMES
+4. PRACTICAL COOKING TIPS
+
+The response should be structured and practical. Use only the products listed above.
+
+Format your response in a clear, organized way with sections for each meal and include nutritional information.
+
+THE RESPONSE MUST BE IN ENGLISH!
+"""
+            system_message = 'You are a professional nutritionist with extensive experience in meal plan creation and nutrition recommendations. Always respond in English.'
 
         # Send request to ChatGPT
         headers = {
@@ -124,7 +159,7 @@ ATBILDEI JĀBŪT LATVIEŠU VALODĀ!
             'messages': [
                 {
                     'role': 'system',
-                    'content': 'Tu esi profesionāls uztura speciālists ar plašu pieredzi ēdienkārtu izveidē un uztura ieteikumos. Atbildi vienmēr latviešu valodā.'
+                    'content': system_message
                 },
                 {
                     'role': 'user',
@@ -589,7 +624,8 @@ def generate_meal_plan():
         'height': data.get('height', 175),
         'age': data.get('age', 30),
         'activity': data.get('activity', 'moderate'),
-        'period': data.get('period', 'week')
+        'period': data.get('period', 'week'),
+        'language': data.get('language', 'lv')  # Default to Latvian
     }
     
     # Generate a meal plan via ChatGPT

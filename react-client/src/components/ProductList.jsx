@@ -1,7 +1,10 @@
 import React from "react";
-import "./productList.css";
+import { useLanguage } from "../contexts/LanguageContext";
+import "./ProductList.css";
 
 export default function ProductList({ diet }) {
+  const { t } = useLanguage();
+  
   if (!diet) return null;
 
   const hasItems = Array.isArray(diet.items) && diet.items.length > 0;
@@ -10,23 +13,23 @@ export default function ProductList({ diet }) {
   return (
     <div className="card product-list" style={{ marginTop: 12 }}>
       <h3>
-        Предложенный рацион ({diet.period === "week" ? "г/день на неделю" : "г/день"})
+        {t("productList.suggestedDiet")} ({diet.period === "week" ? t("productList.gPerDayWeek") : t("productList.gPerDay")})
       </h3>
 
       {entries.length === 0 ? (
-        <div className="muted">Рацион пуст — попробуй изменить параметры.</div>
+        <div className="muted">{t("productList.empty")}</div>
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table className="table">
             <thead>
               <tr>
-                <th>Продукт</th>
-                <th>Граммы</th>
-                <th>Ккал/день</th>
-                <th>Белки</th>
-                <th>Жиры</th>
-                <th>Углеводы</th>
-                <th>Стоимость, €</th>
+                <th>{t("productList.product")}</th>
+                <th>{t("productList.grams")}</th>
+                <th>{t("productList.kcalPerDay")}</th>
+                <th>{t("productList.protein")}</th>
+                <th>{t("productList.fat")}</th>
+                <th>{t("productList.carbs")}</th>
+                <th>{t("productList.cost")}</th>
               </tr>
             </thead>
             <tbody>
@@ -47,24 +50,24 @@ export default function ProductList({ diet }) {
       )}
 
       <div style={{ marginTop: 8 }}>
-        Итоговая стоимость: <b>{diet.total_cost}</b>
+        {t("productList.totalCost")}: <b>{diet.total_cost}</b>
       </div>
       <div className="muted" style={{ marginTop: 4 }}>
-        Статус решения: {diet.status}
+        {t("productList.solutionStatus")}: {diet.status}
       </div>
 
       {diet.nutrient_totals && diet.norms && (
         <div className="card" style={{ marginTop: 12 }}>
-          <h4>Итоги по нутриентам</h4>
+          <h4>{t("productList.nutrientSummary")}</h4>
           <div className="grid2">
             <div>
-              <div>Ккал: {diet.nutrient_totals.kcal} / норма {diet.norms.kcal}</div>
-              <div>Белки: {diet.nutrient_totals.protein} г / ≥ {diet.norms.protein} г</div>
-              <div>Жиры: {diet.nutrient_totals.fat} г / ≥ {diet.norms.fat} г</div>
-              <div>Углеводы: {diet.nutrient_totals.carbs} г / ≥ {diet.norms.carbs} г</div>
+              <div>{t("productList.kcalTarget")}: {diet.nutrient_totals.kcal} / {t("productList.target")} {diet.norms.kcal}</div>
+              <div>{t("productList.protein")}: {diet.nutrient_totals.protein} g / ≥ {diet.norms.protein} g</div>
+              <div>{t("productList.fat")}: {diet.nutrient_totals.fat} g / ≥ {diet.norms.fat} g</div>
+              <div>{t("productList.carbs")}: {diet.nutrient_totals.carbs} g / ≥ {diet.norms.carbs} g</div>
             </div>
             <div className="muted">
-              Период: {diet.period === "week" ? "неделя" : "день"}
+              {t("productList.period")}: {diet.period === "week" ? t("form.week") : t("form.day")}
             </div>
           </div>
         </div>
