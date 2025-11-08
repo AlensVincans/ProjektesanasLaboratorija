@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import ProductList from "../components/ProductList";
 import RecipeList from "../components/RecipeList";
 import Charts from "../components/Charts";
+import { useLanguage } from "../contexts/LanguageContext";
 import "./ResultsPage.css";
 
 export default function ResultsPage() {
+  const { t } = useLanguage();
   const [profile, setProfile] = useState({ allergens: [], dislikes: [] });
   const [diet, setDiet] = useState(null);
 
-  // Загрузка данных из localStorage
+  // Load data from localStorage
   useEffect(() => {
     const raw = localStorage.getItem("demo_profile");
     if (raw) {
@@ -27,8 +29,8 @@ export default function ResultsPage() {
   return (
     <div className="results-page">
       <div className="page-header">
-        <h1>Результаты расчета</h1>
-        <p>Просмотрите детальную информацию о вашем рационе</p>
+        <h1>{t("results.title")}</h1>
+        <p>{t("results.subtitle")}</p>
       </div>
       <div className="page-content">
         <div className="results-grid">

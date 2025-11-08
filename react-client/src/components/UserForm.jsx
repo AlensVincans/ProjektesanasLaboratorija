@@ -1,22 +1,17 @@
 import React, { useEffect, useState } from "react";
 import ProductList from "./ProductList";
+import { useLanguage } from "../contexts/LanguageContext";
 import "./userForm.css";
 
-const activityOptions = [
-  { value: "low", label: "Низкая" },
-  { value: "moderate", label: "Умеренная" },
-  { value: "active", label: "Активная" },
-];
-
-// компонент ввода тегов (для аллергенов и нелюбимых продуктов)
-function TagInput({ placeholder, suggestions = [], value, setValue }) {
+// Tag input component (for allergens and disliked products)
+function TagInput({ placeholder, suggestions = [], value, setValue, t }) {
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
 
   const addTag = (tag) => {
-    const t = tag.trim();
-    if (!t) return;
-    if (!value.includes(t)) setValue([...value, t]);
+    const trimmedTag = tag.trim();
+    if (!trimmedTag) return;
+    if (!value.includes(trimmedTag)) setValue([...value, trimmedTag]);
     setInput("");
     setOpen(false);
   };
@@ -30,9 +25,9 @@ function TagInput({ placeholder, suggestions = [], value, setValue }) {
   return (
     <div className="tag-input">
       <div className="tags">
-        {value.map((t) => (
-          <span key={t} className="tag" onClick={() => removeTag(t)}>
-            {t} ✕
+        {value.map((tag) => (
+          <span key={tag} className="tag" onClick={() => removeTag(tag)}>
+            {tag} ✕
           </span>
         ))}
         <input
@@ -66,7 +61,7 @@ function TagInput({ placeholder, suggestions = [], value, setValue }) {
             className="dropdown-item muted"
             onMouseDown={() => addTag(input)}
           >
-            Добавить «{input}»
+            {t("form.add")} "{input}"
           </div>
         </div>
       )}
@@ -75,6 +70,7 @@ function TagInput({ placeholder, suggestions = [], value, setValue }) {
 }
 
 export default function UserForm() {
+  const { language, t } = useLanguage();
   const [gender, setGender] = useState("female");
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
@@ -88,23 +84,31 @@ export default function UserForm() {
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState("");
 
-  // результат TDEE
+  // TDEE result
   const [calories, setCalories] = useState(null);
   const [calcErr, setCalcErr] = useState("");
 
-  // результат оптимизации
+  // Optimization result
   const [optLoading, setOptLoading] = useState(false);
   const [optErr, setOptErr] = useState("");
   const [diet, setDiet] = useState(null); // { diet, total_cost, nutrient_totals, norms, period, status }
   
-  // результат генерации плана питания
+  // Meal plan generation result
   const [mealPlanLoading, setMealPlanLoading] = useState(false);
   const [mealPlanErr, setMealPlanErr] = useState("");
   const [mealPlan, setMealPlan] = useState(null); // { diet, meal_plan, ... }
 
-  const commonFood = ["Молоко","Глютен","Арахис","Курица","Рыба","Яйцо","Орехи","Рис","Яблоко"];
+  const activityOptions = [
+    { value: "low", label: t("form.low") },
+    { value: "moderate", label: t("form.moderate") },
+    { value: "active", label: t("form.active") },
+  ];
 
-  // автоподгрузка профиля из localStorage
+  const commonFood = language === "lv" 
+    ? ["Piens", "Glutēns", "Arašīdi", "Vista", "Zivis", "Olas", "Rieksti", "Rīsi", "Āboli"]
+    : ["Milk", "Gluten", "Peanuts", "Chicken", "Fish", "Egg", "Nuts", "Rice", "Apple"];
+
+  // Auto-load profile from localStorage
   useEffect(() => {
     const raw = localStorage.getItem("demo_profile");
     if (!raw) return;
@@ -121,7 +125,7 @@ export default function UserForm() {
     } catch {}
   }, []);
 
-  // вспомогательная: готовим тело запроса для бэка
+  // Helper: prepare request body for backend
   const makePayload = () => {
     const payload = {
       gender,
@@ -130,13 +134,13 @@ export default function UserForm() {
       height: Number(height) || null,
       activity,
       period,
-      // маппим «Молоко» → lactose, остальное пока как есть в нижнем регистре
+      // Map "Milk"/"Piens" → lactose, rest as lowercase
       allergens: Array.from(
         new Set(
-          allergens.map((a) => a.toLowerCase()).map((a) => (a === "молоко" ? "lactose" : a))
+          allergens.map((a) => a.toLowerCase()).map((a) => (a === "milk" || a === "молоко" || a === "piens" ? "lactose" : a))
         )
       ),
-      dislikes, // пока не используем на бэке
+      dislikes, // Not used on backend yet
     };
     return payload;
   };
@@ -149,11 +153,11 @@ export default function UserForm() {
     setCalcErr("");
     setCalories(null);
 
-    // сохраняем локально (демо)
+    // Save locally (demo)
     await new Promise((res) => setTimeout(res, 200));
     localStorage.setItem("demo_profile", JSON.stringify(body));
 
-    // считаем TDEE
+    // Calculate TDEE
     try {
       const resp = await fetch("http://localhost:5000/tdee", {
         method: "POST",
@@ -173,7 +177,7 @@ export default function UserForm() {
       setCalcErr(String(e.message || e));
     } finally {
       setSaving(false);
-      setSavedMsg("Сохранено локально.");
+      setSavedMsg(t("form.savedLocally"));
       setTimeout(() => setSavedMsg(""), 2000);
     }
   };
@@ -228,6 +232,7 @@ export default function UserForm() {
           activity: body.activity,
           allergens: body.allergens,
           period: body.period,
+          language: language, // Pass language to backend
         }),
       });
       const data = await resp.json();
@@ -247,33 +252,33 @@ export default function UserForm() {
 
   return (
     <div className="user-form card">
-      <h2>Анкета</h2>
+      <h2>{t("form.questionnaire")}</h2>
       <div className="grid2">
         <label>
-          Пол
+          {t("form.gender")}
           <select value={gender} onChange={(e) => setGender(e.target.value)}>
-            <option value="female">Женский</option>
-            <option value="male">Мужской</option>
+            <option value="female">{t("form.female")}</option>
+            <option value="male">{t("form.male")}</option>
           </select>
         </label>
 
         <label>
-          Возраст
+          {t("form.age")}
           <input type="number" value={age} onChange={(e) => setAge(e.target.value)} min="1" />
         </label>
 
         <label>
-          Вес (кг)
+          {t("form.weight")}
           <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} min="1" step="0.1" />
         </label>
 
         <label>
-          Рост (см)
+          {t("form.height")}
           <input type="number" value={height} onChange={(e) => setHeight(e.target.value)} min="50" />
         </label>
 
         <label>
-          Физ. активность
+          {t("form.physicalActivity")}
           <select value={activity} onChange={(e) => setActivity(e.target.value)}>
             {activityOptions.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -282,43 +287,45 @@ export default function UserForm() {
         </label>
 
         <label>
-          Период
+          {t("form.period")}
           <select value={period} onChange={(e) => setPeriod(e.target.value)}>
-            <option value="day">День</option>
-            <option value="week">Неделя</option>
+            <option value="day">{t("form.day")}</option>
+            <option value="week">{t("form.week")}</option>
           </select>
         </label>
       </div>
 
       <div className="grid1">
-        <label>Аллергены</label>
+        <label>{t("form.allergens")}</label>
         <TagInput
-          placeholder="Добавь аллерген и нажми Enter…"
+          placeholder={t("form.addAllergen")}
           suggestions={commonFood}
           value={allergens}
           setValue={setAllergens}
+          t={t}
         />
 
-        <label>Нелюбимые продукты</label>
+        <label>{t("form.dislikedProducts")}</label>
         <TagInput
-          placeholder="Добавь продукт и нажми Enter…"
+          placeholder={t("form.addProduct")}
           suggestions={commonFood}
           value={dislikes}
           setValue={setDislikes}
+          t={t}
         />
       </div>
 
       <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <button className="primary" onClick={save} disabled={saving}>
-          {saving ? "Сохранение…" : "Сохранить и посчитать TDEE"}
+          {saving ? t("form.saving") : t("form.save")}
         </button>
 
         <button onClick={optimize} disabled={optLoading || mealPlanLoading} className="secondary">
-          {optLoading ? "Оптимизация…" : "Оптимизировать рацион"}
+          {optLoading ? t("form.optimizing") : t("form.optimize")}
         </button>
 
         <button onClick={generateMealPlan} disabled={mealPlanLoading || optLoading} className="secondary">
-          {mealPlanLoading ? "Генерация плана…" : "Сгенерировать план питания"}
+          {mealPlanLoading ? t("form.generating") : t("form.generateMealPlan")}
         </button>
 
         {savedMsg && <span className="muted">{savedMsg}</span>}
@@ -327,16 +334,16 @@ export default function UserForm() {
       {calcErr && <div className="error" style={{ marginTop: 8 }}>{calcErr}</div>}
       {calories != null && (
         <div className="success" style={{ marginTop: 8 }}>
-          Суточная норма: <b>{calories}</b> ккал
+          {t("form.dailyRequirement")}: <b>{calories}</b> {t("form.kcal")}
         </div>
       )}
 
       {optErr && <div className="error" style={{ marginTop: 8 }}>{optErr}</div>}
-      {mealPlanErr && <div className="error" style={{ marginTop: 8 }}>Ошибка генерации плана: {mealPlanErr}</div>}
+      {mealPlanErr && <div className="error" style={{ marginTop: 8 }}>{t("form.mealPlanError")}: {mealPlanErr}</div>}
       {diet && <ProductList diet={diet} />}
       {mealPlan && mealPlan.meal_plan && (
         <div className="card" style={{ marginTop: 12 }}>
-          <h3>План питания (ChatGPT)</h3>
+          <h3>{t("form.mealPlan")}</h3>
           <div 
             style={{ 
               whiteSpace: "pre-wrap", 

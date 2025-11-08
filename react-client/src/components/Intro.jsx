@@ -1,13 +1,14 @@
 import React from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function Intro() {
+  const { t } = useLanguage();
+  
   return (
     <div className="card">
-      <h1>Персональный рацион</h1>
+      <h1>{t("intro.title")}</h1>
       <p>
-        Заполни анкету ниже: пол, возраст, рост, вес, физическая активность,
-        аллергены и нелюбимые продукты. Мы подберём список продуктов, рецепты
-        и покажем графики цен.
+        {t("intro.description")}
       </p>
     </div>
   );
