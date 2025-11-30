@@ -207,10 +207,39 @@ export default function UserForm() {
       if (!resp.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
       if (data.error) throw new Error(data.error);
       setDiet(data);
+      
+      // Save to history if user is logged in
+      await saveToHistory(body, data);
     } catch (e) {
       setOptErr(String(e.message || e));
     } finally {
       setOptLoading(false);
+    }
+  };
+
+  const saveToHistory = async (params, results) => {
+    try {
+      await fetch("http://localhost:5000/history", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gender: params.gender,
+          age: params.age,
+          weight: params.weight,
+          height: params.height,
+          activity: params.activity,
+          period: params.period,
+          allergens: params.allergens,
+          vegetarian: false,
+          total_cost: results.total_cost,
+          nutrient_totals: results.nutrient_totals,
+          diet: results.diet,
+        }),
+      });
+      // Silently fail if not logged in
+    } catch (e) {
+      console.log("Not logged in or failed to save history");
     }
   };
 

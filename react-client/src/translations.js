@@ -134,6 +134,59 @@ export const translations = {
     intro: {
       title: "Personīgais uzturs",
       description: "Aizpildiet anketu zemāk: dzimums, vecums, augums, svars, fiziskā aktivitāte, alergēni un nepiecietami produkti. Mēs izvēlēsimies produktu sarakstu, receptes un parādīsim cenu diagrammas."
+    },
+    // Navigation
+    navigation: {
+      home: "Sākums",
+      calculator: "Kalkulators",
+      history: "Vēsture",
+      about: "Par mums",
+      login: "Ielogoties ar Google",
+      logout: "Iziet"
+    },
+    // History
+    history: {
+      title: "Aprēķinu vēsture",
+      subtitle: "Skatiet savus iepriekšējos aprēķinus",
+      loading: "Ielādēšana...",
+      notLoggedIn: "Lūdzu, ielogojieties, lai skatītu savu aprēķinu vēsturi.",
+      noHistory: "Vēl nav neviena aprēķina. Sāciet, izveidojot jaunu aprēķinu!",
+      error: "Neizdevās ielādēt vēsturi",
+      confirmDelete: "Vai tiešām dzēst šo aprēķinu?",
+      delete: "Dzēst",
+      years: "g.",
+      cost: "Izmaksas",
+      kcal: "Kcal",
+      details: "Aprēķina detaļas",
+      parameters: "Parametri",
+      nutrition: "Uzturvērtības kopsavilkums",
+      totalCost: "Kopējās izmaksas",
+      dietPlan: "Uztura plāns"
+    },
+    // Profile
+    profile: {
+      title: "Mans profils",
+      subtitle: "Pārvaldiet savus uztura aprēķinus un preferences",
+      loading: "Ielādēšana...",
+      overview: "Pārskats",
+      history: "Vēsture",
+      memberSince: "Dalībnieks kopš",
+      totalCalculations: "Kopējie aprēķini",
+      avgCost: "Vidējās izmaksas",
+      avgKcal: "Vidējās kalorijas",
+      avgProtein: "Vidējie olbaltumvielas",
+      insights: "Ieskati",
+      periodPreference: "Perioda preferences",
+      costRange: "Izmaksu diapazons",
+      cheapest: "Lētākais",
+      mostExpensive: "Dārgākais",
+      noCalculations: "Vēl nav aprēķinu. Sāciet, izveidojot savu pirmo uztura plānu!",
+      favorites: "Iecienītākās diētas",
+      recentCalculations: "Nesenie aprēķini",
+      addToFavorites: "Pievienot favorītiem",
+      removeFromFavorites: "Noņemt no favorītiem",
+      exportData: "Eksportēt datus",
+      exportHistory: "Eksportēt vēsturi JSON formātā"
     }
   },
   en: {
@@ -271,6 +324,59 @@ export const translations = {
     intro: {
       title: "Personal Diet",
       description: "Fill out the questionnaire below: gender, age, height, weight, physical activity, allergens and disliked products. We will select a list of products, recipes and show price charts."
+    },
+    // Navigation
+    navigation: {
+      home: "Home",
+      calculator: "Calculator",
+      history: "History",
+      about: "About",
+      login: "Login with Google",
+      logout: "Logout"
+    },
+    // History
+    history: {
+      title: "Calculation History",
+      subtitle: "View your previous calculations",
+      loading: "Loading...",
+      notLoggedIn: "Please log in to view your calculation history.",
+      noHistory: "No calculations yet. Start by creating a new calculation!",
+      error: "Failed to load history",
+      confirmDelete: "Delete this calculation?",
+      delete: "Delete",
+      years: "y",
+      cost: "Cost",
+      kcal: "Kcal",
+      details: "Calculation Details",
+      parameters: "Parameters",
+      nutrition: "Nutrition Summary",
+      totalCost: "Total Cost",
+      dietPlan: "Diet Plan"
+    },
+    // Profile
+    profile: {
+      title: "My Profile",
+      subtitle: "Manage your diet calculations and preferences",
+      loading: "Loading...",
+      overview: "Overview",
+      history: "History",
+      memberSince: "Member since",
+      totalCalculations: "Total Calculations",
+      avgCost: "Average Cost",
+      avgKcal: "Average Calories",
+      avgProtein: "Average Protein",
+      insights: "Insights",
+      periodPreference: "Period Preference",
+      costRange: "Cost Range",
+      cheapest: "Cheapest",
+      mostExpensive: "Most Expensive",
+      noCalculations: "No calculations yet. Start by creating your first diet plan!",
+      favorites: "Favorite Diets",
+      recentCalculations: "Recent Calculations",
+      addToFavorites: "Add to favorites",
+      removeFromFavorites: "Remove from favorites",
+      exportData: "Export Data",
+      exportHistory: "Export history as JSON"
     }
   }
 };
