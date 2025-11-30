@@ -1,6 +1,6 @@
 import React from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import "./ProductList.css";
+import "./productList.css";
 
 export default function ProductList({ diet }) {
   const { t } = useLanguage();

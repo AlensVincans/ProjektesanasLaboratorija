@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session, redirect
 from flask_cors import CORS
 from pulp import LpProblem, LpVariable, LpMinimize, lpSum, PULP_CBC_CMD, value, LpStatus
 import sqlite3
@@ -6,13 +6,26 @@ import logging
 import requests
 import json
 import os
+import datetime
 from dotenv import load_dotenv
 import unicodedata
+from urllib.parse import urlencode
 
 load_dotenv()
+# Also try to load `auth.env` (used in this workspace) so users can keep credentials there
+try:
+    env_path = os.path.join(os.path.dirname(__file__), 'auth.env')
+    if os.path.exists(env_path):
+        load_dotenv(env_path)
+except Exception:
+    pass
 
 app = Flask(__name__)
-CORS(app)
+# session secret for Flask sessions
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'devsecret')
+# allow the React frontend (dev server) to talk and send cookies
+FRONTEND_ORIGIN = os.getenv('FRONTEND_ORIGIN', 'http://localhost:3000')
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": FRONTEND_ORIGIN}})
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -656,5 +669,324 @@ def generate_meal_plan():
     
     return jsonify(result)
 
+
+@app.route('/login')
+def oauth_login():
+    """Start Google OAuth flow by redirecting user to Google's auth endpoint."""
+    client_id = os.getenv('GOOGLE_CLIENT_ID')
+    if not client_id:
+        return jsonify({
+            'error': 'GOOGLE_CLIENT_ID not configured',
+            'hint': 'Create flask-server/auth.env or .env with GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET (see OAUTH_README.md)'
+        }), 500
+    redirect_uri = os.getenv('GOOGLE_REDIRECT_URI', 'http://localhost:5000/callback')
+    state = os.urandom(8).hex()
+    session['oauth_state'] = state
+    params = {
+        'client_id': client_id,
+        'redirect_uri': redirect_uri,
+        'response_type': 'code',
+        'scope': 'openid email profile',
+        'state': state,
+        'access_type': 'offline',
+        'prompt': 'consent'
+    }
+    auth_url = 'https://accounts.google.com/o/oauth2/v2/auth?' + urlencode(params)
+    return redirect(auth_url)
+
+
+@app.route('/callback')
+def oauth_callback():
+    """Handle Google OAuth callback, exchange code for token and store user in session."""
+    code = request.args.get('code')
+    state = request.args.get('state')
+    if not code:
+        return jsonify({'error': 'Missing code parameter'}), 400
+    if state != session.get('oauth_state'):
+        return jsonify({'error': 'Invalid OAuth state'}), 400
+
+    client_id = os.getenv('GOOGLE_CLIENT_ID')
+    client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
+    if not client_id or not client_secret:
+        return jsonify({
+            'error': 'GOOGLE_CLIENT_ID/SECRET not configured',
+            'hint': 'Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in flask-server/auth.env or .env and restart the server'
+        }), 500
+    redirect_uri = os.getenv('GOOGLE_REDIRECT_URI', 'http://localhost:5000/callback')
+    token_url = 'https://oauth2.googleapis.com/token'
+    data = {
+        'code': code,
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'redirect_uri': redirect_uri,
+        'grant_type': 'authorization_code'
+    }
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    try:
+        token_resp = requests.post(token_url, data=data, headers=headers, timeout=10)
+        token_resp.raise_for_status()
+        token_json = token_resp.json()
+        access_token = token_json.get('access_token')
+        if not access_token:
+            return jsonify({'error': 'Failed to obtain access token', 'details': token_json}), 400
+
+        # Fetch user info from Google's OpenID Connect endpoint
+        userinfo_resp = requests.get('https://openidconnect.googleapis.com/v1/userinfo', headers={'Authorization': f'Bearer {access_token}'}, timeout=10)
+        userinfo_resp.raise_for_status()
+        user = userinfo_resp.json()
+
+        # Minimal user object to store in session
+        session['user'] = {
+            'id': user.get('sub'),
+            'email': user.get('email'),
+            'name': user.get('name'),
+            'picture': user.get('picture')
+        }
+        session['access_token'] = access_token
+
+        # Redirect back to frontend
+        return redirect(FRONTEND_ORIGIN + '/')
+    except requests.RequestException as e:
+        return jsonify({'error': 'OAuth token exchange failed', 'details': str(e)}), 500
+
+
+@app.route('/user')
+def get_user():
+    """Return current logged-in user info from session."""
+    user = session.get('user')
+    if not user:
+        return jsonify({'logged_in': False})
+    return jsonify({'logged_in': True, 'user': user})
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(FRONTEND_ORIGIN + '/')
+
+
+@app.route('/history', methods=['GET'])
+def get_calculation_history():
+    """Get calculation history for the logged-in user."""
+    user = session.get('user')
+    if not user:
+        return jsonify({'error': 'Unauthorized', 'logged_in': False}), 401
+    
+    user_id = user.get('id')
+    if not user_id:
+        return jsonify({'error': 'Invalid user session'}), 400
+    
+    try:
+        db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.db')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Get last 20 calculations for this user
+        cursor.execute('''
+            SELECT id, created_at, gender, weight, height, age, activity, period,
+                   allergens, vegetarian, total_cost, total_kcal, total_protein,
+                   total_fat, total_carbs, diet_json
+            FROM calculation_history
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            LIMIT 20
+        ''', (user_id,))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        history = []
+        for row in rows:
+            history.append({
+                'id': row[0],
+                'created_at': row[1],
+                'gender': row[2],
+                'weight': row[3],
+                'height': row[4],
+                'age': row[5],
+                'activity': row[6],
+                'period': row[7],
+                'allergens': row[8],
+                'vegetarian': bool(row[9]),
+                'total_cost': row[10],
+                'total_kcal': row[11],
+                'total_protein': row[12],
+                'total_fat': row[13],
+                'total_carbs': row[14],
+                'diet': json.loads(row[15]) if row[15] else {}
+            })
+        
+        return jsonify({'history': history, 'logged_in': True})
+    except Exception as e:
+        logging.error(f"Error fetching history: {str(e)}")
+        return jsonify({'error': f'Failed to fetch history: {str(e)}'}), 500
+
+
+@app.route('/history', methods=['POST'])
+def save_calculation():
+    """Save a calculation to history for the logged-in user."""
+    user = session.get('user')
+    if not user:
+        return jsonify({'error': 'Unauthorized', 'logged_in': False}), 401
+    
+    user_id = user.get('id')
+    user_email = user.get('email')
+    if not user_id:
+        return jsonify({'error': 'Invalid user session'}), 400
+    
+    data = request.json
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Invalid input: JSON object required'}), 400
+    
+    try:
+        # Extract data from request
+        gender = data.get('gender', 'male')
+        weight = float(data.get('weight', 70))
+        height = float(data.get('height', 175))
+        age = int(data.get('age', 30))
+        activity = data.get('activity', 'moderate')
+        period = data.get('period', 'week')
+        allergens = json.dumps(data.get('allergens', []))
+        vegetarian = 1 if data.get('vegetarian', False) else 0
+        
+        # Extract results
+        total_cost = float(data.get('total_cost', 0))
+        nutrient_totals = data.get('nutrient_totals', {})
+        total_kcal = float(nutrient_totals.get('kcal', 0))
+        total_protein = float(nutrient_totals.get('protein', 0))
+        total_fat = float(nutrient_totals.get('fat', 0))
+        total_carbs = float(nutrient_totals.get('carbs', 0))
+        diet = data.get('diet', {})
+        diet_json = json.dumps(diet)
+        
+        # Save to database
+        db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.db')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO calculation_history 
+            (user_id, user_email, gender, weight, height, age, activity, period,
+             allergens, vegetarian, total_cost, total_kcal, total_protein,
+             total_fat, total_carbs, diet_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, user_email, gender, weight, height, age, activity, period,
+              allergens, vegetarian, total_cost, total_kcal, total_protein,
+              total_fat, total_carbs, diet_json))
+        
+        calculation_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'id': calculation_id,
+            'message': 'Calculation saved to history'
+        })
+    except Exception as e:
+        logging.error(f"Error saving calculation: {str(e)}")
+        return jsonify({'error': f'Failed to save calculation: {str(e)}'}), 500
+
+
+@app.route('/history/<int:calculation_id>', methods=['DELETE'])
+def delete_calculation(calculation_id):
+    """Delete a calculation from history."""
+    user = session.get('user')
+    if not user:
+        return jsonify({'error': 'Unauthorized', 'logged_in': False}), 401
+    
+    user_id = user.get('id')
+    if not user_id:
+        return jsonify({'error': 'Invalid user session'}), 400
+    
+    try:
+        db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.db')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Delete only if it belongs to this user
+        cursor.execute('''
+            DELETE FROM calculation_history
+            WHERE id = ? AND user_id = ?
+        ''', (calculation_id, user_id))
+        
+        deleted_rows = cursor.rowcount
+        conn.commit()
+        conn.close()
+        
+        if deleted_rows == 0:
+            return jsonify({'error': 'Calculation not found or unauthorized'}), 404
+        
+        return jsonify({'success': True, 'message': 'Calculation deleted'})
+    except Exception as e:
+        logging.error(f"Error deleting calculation: {str(e)}")
+        return jsonify({'error': f'Failed to delete calculation: {str(e)}'}), 500
+
+
+@app.route('/history/export', methods=['GET'])
+def export_history():
+    """Export user's calculation history as JSON."""
+    user = session.get('user')
+    if not user:
+        return jsonify({'error': 'Unauthorized', 'logged_in': False}), 401
+    
+    user_id = user.get('id')
+    if not user_id:
+        return jsonify({'error': 'Invalid user session'}), 400
+    
+    try:
+        db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.db')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Get all calculations for this user
+        cursor.execute('''
+            SELECT id, created_at, gender, weight, height, age, activity, period,
+                   allergens, vegetarian, total_cost, total_kcal, total_protein,
+                   total_fat, total_carbs, diet_json
+            FROM calculation_history
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+        ''', (user_id,))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        export_data = {
+            'user': {
+                'id': user_id,
+                'email': user.get('email'),
+                'name': user.get('name')
+            },
+            'export_date': json.dumps(str(datetime.datetime.now())),
+            'calculations': []
+        }
+        
+        for row in rows:
+            export_data['calculations'].append({
+                'id': row[0],
+                'created_at': row[1],
+                'gender': row[2],
+                'weight': row[3],
+                'height': row[4],
+                'age': row[5],
+                'activity': row[6],
+                'period': row[7],
+                'allergens': row[8],
+                'vegetarian': bool(row[9]),
+                'total_cost': row[10],
+                'total_kcal': row[11],
+                'total_protein': row[12],
+                'total_fat': row[13],
+                'total_carbs': row[14],
+                'diet': json.loads(row[15]) if row[15] else {}
+            })
+        
+        return jsonify(export_data)
+    except Exception as e:
+        logging.error(f"Error exporting history: {str(e)}")
+        return jsonify({'error': f'Failed to export history: {str(e)}'}), 500
+
+
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(host="localhost", port=5000, debug=True)

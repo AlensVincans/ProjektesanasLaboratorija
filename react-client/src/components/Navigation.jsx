@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage } from "../contexts/LanguageContext";
 import "./Navigation.css";
@@ -6,6 +6,16 @@ import "./Navigation.css";
 export default function Navigation() {
   const location = useLocation();
   const { language, changeLanguage, t } = useLanguage();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/user", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.logged_in) setUser(data.user);
+      })
+      .catch(() => {});
+  }, []);
 
   const isActive = (path) => {
     return location.pathname === path ? "active" : "";
@@ -20,16 +30,13 @@ export default function Navigation() {
         <div className="nav-right">
           <div className="nav-links">
             <Link to="/" className={`nav-link ${isActive("/")}`}>
-              {t("nav.home")}
+              {t("navigation.home") || t("nav.home")}
             </Link>
             <Link to="/calculator" className={`nav-link ${isActive("/calculator")}`}>
-              {t("nav.calculator")}
-            </Link>
-            <Link to="/results" className={`nav-link ${isActive("/results")}`}>
-              {t("nav.results")}
+              {t("navigation.calculator") || t("nav.calculator")}
             </Link>
             <Link to="/about" className={`nav-link ${isActive("/about")}`}>
-              {t("nav.about")}
+              {t("navigation.about") || t("nav.about")}
             </Link>
           </div>
           <div className="language-switcher">
@@ -45,6 +52,23 @@ export default function Navigation() {
             >
               EN
             </button>
+          </div>
+          <div className="auth-buttons" style={{ marginLeft: 12 }}>
+            {user ? (
+              <>
+                <Link to="/profile" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', marginRight: 12 }}>
+                  <img
+                    src={user.avatar_url || user.picture}
+                    alt="avatar"
+                    style={{ width: 28, height: 28, borderRadius: 14, marginRight: 8 }}
+                  />
+                  <span style={{ color: '#2c3e50', fontWeight: 500 }}>{user.login || user.name || user.email}</span>
+                </Link>
+                <a className="nav-link" href="http://localhost:5000/logout">{t("navigation.logout")}</a>
+              </>
+            ) : (
+              <a className="nav-link" href="http://localhost:5000/login">{t("navigation.login")}</a>
+            )}
           </div>
         </div>
       </div>
