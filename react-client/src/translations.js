@@ -68,7 +68,8 @@ export const translations = {
       dailyRequirement: "Dienas nepieciešamība",
       kcal: "kcal",
       mealPlanError: "Uztura plāna ģenerēšanas kļūda",
-      mealPlan: "Uztura plāns (ChatGPT)"
+      mealPlan: "Uztura plāns (ChatGPT)",
+      viewDetailedResults: "Skatīt detalizētos rezultātus"
     },
     // ProductList
     productList: {
@@ -128,7 +129,9 @@ export const translations = {
     },
     // Charts
     charts: {
-      title: "Produktu cenu diagramma"
+      title: "Produktu cenu diagramma",
+      costChart: "Izmaksas pa produktiem",
+      nutrientChart: "Makroelementu sadalījums"
     },
     // Intro
     intro: {
@@ -258,7 +261,8 @@ export const translations = {
       dailyRequirement: "Daily requirement",
       kcal: "kcal",
       mealPlanError: "Meal plan generation error",
-      mealPlan: "Meal Plan (ChatGPT)"
+      mealPlan: "Meal Plan (ChatGPT)",
+      viewDetailedResults: "View Detailed Results"
     },
     // ProductList
     productList: {
@@ -318,7 +322,9 @@ export const translations = {
     },
     // Charts
     charts: {
-      title: "Product Price Chart"
+      title: "Product Price Chart",
+      costChart: "Cost by Product",
+      nutrientChart: "Macronutrient Distribution"
     },
     // Intro
     intro: {
