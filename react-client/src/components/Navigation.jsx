@@ -38,6 +38,11 @@ export default function Navigation() {
             <Link to="/about" className={`nav-link ${isActive("/about")}`}>
               {t("navigation.about") || t("nav.about")}
             </Link>
+            {user && (
+              <Link to="/history" className={`nav-link ${isActive("/history")}`}>
+                {t("navigation.history") || t("nav.history") || "History"}
+              </Link>
+            )}
           </div>
           <div className="language-switcher">
             <button

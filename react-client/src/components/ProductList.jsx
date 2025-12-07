@@ -1,11 +1,35 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import "./productList.css";
+import "./ProductList.css";
 
-export default function ProductList({ diet }) {
+export default function ProductList({ diet: dietProp }) {
   const { t } = useLanguage();
+  const [diet, setDiet] = useState(dietProp);
   
-  if (!diet) return null;
+  // Load from localStorage if no prop provided
+  useEffect(() => {
+    if (dietProp) {
+      setDiet(dietProp);
+      return;
+    }
+    
+    const savedDiet = localStorage.getItem("current_diet");
+    if (savedDiet) {
+      try {
+        setDiet(JSON.parse(savedDiet));
+      } catch (e) {
+        console.error("Error loading diet:", e);
+      }
+    }
+  }, [dietProp]);
+  
+  if (!diet) {
+    return (
+      <div className="card product-list" style={{ marginTop: 12 }}>
+        <div className="muted">{t("productList.empty") || "No diet data available. Please calculate a diet first."}</div>
+      </div>
+    );
+  }
 
   const hasItems = Array.isArray(diet.items) && diet.items.length > 0;
   const entries = hasItems ? diet.items : Object.entries(diet.diet || {}).map(([name, grams]) => ({ name, grams }));

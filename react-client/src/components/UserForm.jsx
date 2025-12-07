@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ProductList from "./ProductList";
 import { useLanguage } from "../contexts/LanguageContext";
 import "./userForm.css";
@@ -71,6 +72,7 @@ function TagInput({ placeholder, suggestions = [], value, setValue, t }) {
 
 export default function UserForm() {
   const { language, t } = useLanguage();
+  const navigate = useNavigate();
   const [gender, setGender] = useState("female");
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
@@ -208,6 +210,9 @@ export default function UserForm() {
       if (data.error) throw new Error(data.error);
       setDiet(data);
       
+      // Save diet to localStorage for ResultsPage
+      localStorage.setItem("current_diet", JSON.stringify(data));
+      
       // Save to history if user is logged in
       await saveToHistory(body, data);
     } catch (e) {
@@ -271,7 +276,10 @@ export default function UserForm() {
       // Also update diet if meal plan includes it
       if (data.diet) {
         setDiet(data);
+        localStorage.setItem("current_diet", JSON.stringify(data));
       }
+      // Save meal plan to localStorage
+      localStorage.setItem("current_meal_plan", JSON.stringify(data));
     } catch (e) {
       setMealPlanErr(String(e.message || e));
     } finally {
@@ -369,7 +377,24 @@ export default function UserForm() {
 
       {optErr && <div className="error" style={{ marginTop: 8 }}>{optErr}</div>}
       {mealPlanErr && <div className="error" style={{ marginTop: 8 }}>{t("form.mealPlanError")}: {mealPlanErr}</div>}
-      {diet && <ProductList diet={diet} />}
+      {diet && (
+        <>
+          <ProductList diet={diet} />
+          <div style={{ marginTop: 16, textAlign: "center" }}>
+            <button 
+              className="primary" 
+              onClick={() => navigate("/results", { 
+                state: { 
+                  diet: diet,
+                  mealPlan: mealPlan 
+                } 
+              })}
+            >
+              {t("form.viewDetailedResults") || "View Detailed Results"}
+            </button>
+          </div>
+        </>
+      )}
       {mealPlan && mealPlan.meal_plan && (
         <div className="card" style={{ marginTop: 12 }}>
           <h3>{t("form.mealPlan")}</h3>
