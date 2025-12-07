@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import "./ProductList.css";
+import "./productList.css";
 
-
-export default function productList({ diet: dietProp }) {
+export default function ProductList({ diet: dietProp }) {
   const { t } = useLanguage();
   const [diet, setDiet] = useState(dietProp);
   
