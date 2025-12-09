@@ -124,8 +124,14 @@ export const translations = {
     // RecipeList
     recipes: {
       title: "Receptes",
+      recipes: "receptes",
       nothingFound: "Nekas nav atrasts, kas atbilstu ierobežojumiem.",
-      ingredients: "Sastāvdaļas"
+      ingredients: "Sastāvdaļas",
+      time: "Laiks",
+      breakfast: "Brokastis",
+      lunch: "Pusdienas",
+      dinner: "Vakariņas",
+      snack: "Uzkodas"
     },
     // Charts
     charts: {
@@ -317,8 +323,14 @@ export const translations = {
     // RecipeList
     recipes: {
       title: "Recipes",
+      recipes: "recipes",
       nothingFound: "Nothing found matching the restrictions.",
-      ingredients: "Ingredients"
+      ingredients: "Ingredients",
+      time: "Time",
+      breakfast: "Breakfast",
+      lunch: "Lunch",
+      dinner: "Dinner",
+      snack: "Snacks"
     },
     // Charts
     charts: {

@@ -194,7 +194,7 @@ export default function ProfilePage() {
           <>
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="stat-icon">📊</div>
+                <div className="stat-icon stat-icon-calculations"></div>
                 <div className="stat-info">
                   <h3>{stats.totalCalculations}</h3>
                   <p>{t("profile.totalCalculations") || "Total Calculations"}</p>
@@ -202,7 +202,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon">💰</div>
+                <div className="stat-icon stat-icon-cost"></div>
                 <div className="stat-info">
                   <h3>€{stats.avgCost.toFixed(2)}</h3>
                   <p>{t("profile.avgCost") || "Average Cost"}</p>
@@ -210,7 +210,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon">🔥</div>
+                <div className="stat-icon stat-icon-calories"></div>
                 <div className="stat-info">
                   <h3>{stats.avgKcal.toFixed(0)}</h3>
                   <p>{t("profile.avgKcal") || "Average Calories"}</p>
@@ -218,7 +218,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon">💪</div>
+                <div className="stat-icon stat-icon-protein"></div>
                 <div className="stat-info">
                   <h3>{stats.avgProtein.toFixed(1)}g</h3>
                   <p>{t("profile.avgProtein") || "Average Protein"}</p>
@@ -288,13 +288,13 @@ export default function ProfilePage() {
       <div className="profile-history">
         <div className="history-header">
           <button className="export-btn" onClick={exportHistory} title={t("profile.exportHistory") || "Export History"}>
-            📥 {t("profile.exportData") || "Export Data"}
+            {t("profile.exportData") || "Export Data"}
           </button>
         </div>
 
         {favoriteItems.length > 0 && (
           <div className="favorites-section">
-            <h3>⭐ {t("profile.favorites") || "Favorite Diets"}</h3>
+            <h3>{t("profile.favorites") || "Favorite Diets"}</h3>
             <div className="history-grid">
               {favoriteItems.map((item) => (
                 <HistoryCard
@@ -359,14 +359,12 @@ export default function ProfilePage() {
           className={`tab-btn ${activeTab === "overview" ? "active" : ""}`}
           onClick={() => setActiveTab("overview")}
         >
-          <span className="tab-icon">📊</span>
           {t("profile.overview") || "Overview"}
         </button>
         <button
           className={`tab-btn ${activeTab === "history" ? "active" : ""}`}
           onClick={() => setActiveTab("history")}
         >
-          <span className="tab-icon">📜</span>
           {t("profile.history") || "History"}
         </button>
       </div>
@@ -403,7 +401,7 @@ function HistoryCard({ item, isFavorite, onToggleFavorite, onDelete, onSelect, f
             }}
             title={isFavorite ? t("profile.removeFromFavorites") : t("profile.addToFavorites")}
           >
-            {isFavorite ? "⭐" : "☆"}
+            {isFavorite ? "★" : "☆"}
           </button>
           <button
             className="delete-btn-small"
@@ -413,13 +411,13 @@ function HistoryCard({ item, isFavorite, onToggleFavorite, onDelete, onSelect, f
             }}
             title={t("history.delete")}
           >
-            🗑️
+            ×
           </button>
         </div>
       </div>
       <div className="history-card-info">
         <span>
-          {item.gender === "male" ? "♂️" : "♀️"} {item.weight}kg, {item.height}cm, {item.age}{t("history.years") || "y"}
+          {item.gender === "male" ? t("calculator.male") || "Male" : t("calculator.female") || "Female"} - {item.weight}kg, {item.height}cm, {item.age}{t("history.years") || "y"}
         </span>
         <span className={`period-badge ${item.period}`}>
           {item.period === "week" ? t("calculator.week") || "Week" : t("calculator.day") || "Day"}
@@ -427,15 +425,15 @@ function HistoryCard({ item, isFavorite, onToggleFavorite, onDelete, onSelect, f
       </div>
       <div className="history-card-stats">
         <div className="stat">
-          <span className="stat-label">💰</span>
+          <span className="stat-label">{t("results.cost") || "Cost"}</span>
           <span className="stat-value">€{item.total_cost?.toFixed(2) || "0.00"}</span>
         </div>
         <div className="stat">
-          <span className="stat-label">🔥</span>
+          <span className="stat-label">{t("results.kcal") || "Calories"}</span>
           <span className="stat-value">{item.total_kcal?.toFixed(0) || "0"}</span>
         </div>
         <div className="stat">
-          <span className="stat-label">💪</span>
+          <span className="stat-label">{t("results.protein") || "Protein"}</span>
           <span className="stat-value">{item.total_protein?.toFixed(0) || "0"}g</span>
         </div>
       </div>
@@ -491,35 +489,35 @@ function CalculationModal({ calculation, onClose, t, formatDate }) {
           <h3>{t("history.nutrition") || "Nutrition Summary"}</h3>
           <div className="modal-nutrition">
             <div className="nutrition-item-modal">
-              <span className="nutrition-icon">🔥</span>
+              <span className="nutrition-icon nutrition-icon-calories"></span>
               <div>
                 <div className="nutrition-label">{t("results.kcal") || "Calories"}</div>
                 <div className="nutrition-value">{calculation.total_kcal?.toFixed(0) || "0"} kcal</div>
               </div>
             </div>
             <div className="nutrition-item-modal">
-              <span className="nutrition-icon">💪</span>
+              <span className="nutrition-icon nutrition-icon-protein"></span>
               <div>
                 <div className="nutrition-label">{t("results.protein") || "Protein"}</div>
                 <div className="nutrition-value">{calculation.total_protein?.toFixed(1) || "0"} g</div>
               </div>
             </div>
             <div className="nutrition-item-modal">
-              <span className="nutrition-icon">🥑</span>
+              <span className="nutrition-icon nutrition-icon-fat"></span>
               <div>
                 <div className="nutrition-label">{t("results.fat") || "Fat"}</div>
                 <div className="nutrition-value">{calculation.total_fat?.toFixed(1) || "0"} g</div>
               </div>
             </div>
             <div className="nutrition-item-modal">
-              <span className="nutrition-icon">🍞</span>
+              <span className="nutrition-icon nutrition-icon-carbs"></span>
               <div>
                 <div className="nutrition-label">{t("results.carbs") || "Carbs"}</div>
                 <div className="nutrition-value">{calculation.total_carbs?.toFixed(1) || "0"} g</div>
               </div>
             </div>
             <div className="nutrition-item-modal highlight">
-              <span className="nutrition-icon">💰</span>
+              <span className="nutrition-icon nutrition-icon-cost"></span>
               <div>
                 <div className="nutrition-label">{t("history.totalCost") || "Total Cost"}</div>
                 <div className="nutrition-value">€{calculation.total_cost?.toFixed(2) || "0.00"}</div>
@@ -528,6 +526,23 @@ function CalculationModal({ calculation, onClose, t, formatDate }) {
           </div>
         </div>
 
+        {calculation.meal_plan && (
+          <div className="modal-section">
+            <h3>{t("form.mealPlan") || "Meal Plan"}</h3>
+            <div className="modal-meal-plan" style={{ 
+              whiteSpace: 'pre-wrap', 
+              background: '#f8f9fa', 
+              padding: '15px', 
+              borderRadius: '8px',
+              maxHeight: '400px',
+              overflowY: 'auto',
+              lineHeight: '1.6'
+            }}>
+              {calculation.meal_plan}
+            </div>
+          </div>
+        )}
+        
         <div className="modal-section">
           <h3>{t("history.dietPlan") || "Diet Plan"}</h3>
           <div className="modal-diet-list">

@@ -2,7 +2,7 @@ import sqlite3
 import os
 
 # Create database path
-db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.db')
+db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.sqlite')
 
 # Connect to database
 conn = sqlite3.connect(db_path)
@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS calculation_history (
     total_protein REAL,
     total_fat REAL,
     total_carbs REAL,
-    diet_json TEXT
+    diet_json TEXT,
+    meal_plan TEXT
 )
 ''')
 

@@ -133,8 +133,31 @@
 }
 
 .stat-icon {
-  font-size: 3rem;
-  opacity: 0.8;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+}
+
+.stat-icon-calculations {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-icon-cost {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+}
+
+.stat-icon-calories {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+}
+
+.stat-icon-protein {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
 }
 
 .stat-info h3 {
@@ -384,7 +407,11 @@
 }
 
 .stat-label {
-  font-size: 1.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stat-value {
@@ -524,7 +551,36 @@
 }
 
 .nutrition-icon {
-  font-size: 2rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+  flex-shrink: 0;
+}
+
+.nutrition-icon-calories {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+}
+
+.nutrition-icon-protein {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+}
+
+.nutrition-icon-fat {
+  background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+}
+
+.nutrition-icon-carbs {
+  background: linear-gradient(135deg, #48dbfb 0%, #0abde3 100%);
+}
+
+.nutrition-icon-cost {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
 }
 
 .nutrition-label {

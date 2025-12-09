@@ -9,6 +9,7 @@ import AboutPage from "./pages/AboutPage";
 import LoginPage from "./pages/LoginPage";
 import HistoryPage from "./pages/HistoryPage";
 import ProfilePage from "./pages/ProfilePage";
+import ChatGPTPage from "./pages/ChatGPTPage";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
               <Route path="/results" element={<ResultsPage />} />
               <Route path="/history" element={<HistoryPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/chatgpt" element={<ChatGPTPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/about" element={<AboutPage />} />
             </Routes>

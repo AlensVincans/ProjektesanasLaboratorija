@@ -42,32 +42,26 @@ export default function HomePage() {
           <h2 className="section-title">{t("home.features")}</h2>
           <div className="features-grid">
             <div className="feature-card">
-              <div className="feature-icon">📊</div>
               <h3>{t("home.accurateTDEE")}</h3>
               <p>{t("home.accurateTDEEDesc")}</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">🥗</div>
               <h3>{t("home.dietOptimization")}</h3>
               <p>{t("home.dietOptimizationDesc")}</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">🚫</div>
               <h3>{t("home.allergenTracking")}</h3>
               <p>{t("home.allergenTrackingDesc")}</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">💰</div>
               <h3>{t("home.costControl")}</h3>
               <p>{t("home.costControlDesc")}</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">📈</div>
               <h3>{t("home.dataVisualization")}</h3>
               <p>{t("home.dataVisualizationDesc")}</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">🍽️</div>
               <h3>{t("home.recipeSelection")}</h3>
               <p>{t("home.recipeSelectionDesc")}</p>
             </div>

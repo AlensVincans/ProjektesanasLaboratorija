@@ -25,7 +25,7 @@ export default function Navigation() {
     <nav className="main-navigation">
       <div className="nav-container">
         <Link to="/" className="nav-logo">
-          <span>💪</span> {t("nav.personalDiet")}
+          {t("nav.personalDiet")}
         </Link>
         <div className="nav-right">
           <div className="nav-links">
@@ -58,18 +58,18 @@ export default function Navigation() {
               EN
             </button>
           </div>
-          <div className="auth-buttons" style={{ marginLeft: 12 }}>
+          <div className="auth-buttons" style={{ marginLeft: 12, display: 'flex', alignItems: 'center', gap: '12px' }}>
             {user ? (
               <>
-                <Link to="/profile" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', marginRight: 12 }}>
+                <Link to="/profile" className="profile-link">
                   <img
                     src={user.avatar_url || user.picture}
                     alt="avatar"
-                    style={{ width: 28, height: 28, borderRadius: 14, marginRight: 8 }}
+                    className="nav-avatar"
                   />
-                  <span style={{ color: '#2c3e50', fontWeight: 500 }}>{user.login || user.name || user.email}</span>
+                  <span className="nav-username">{user.login || user.name || user.email}</span>
                 </Link>
-                <a className="nav-link" href="http://localhost:5000/logout">{t("navigation.logout")}</a>
+                <a className="nav-link logout-link" href="http://localhost:5000/logout">{t("navigation.logout")}</a>
               </>
             ) : (
               <a className="nav-link" href="http://localhost:5000/login">{t("navigation.login")}</a>

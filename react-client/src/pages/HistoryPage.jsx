@@ -141,12 +141,12 @@ export default function HistoryPage() {
                     }}
                     title={t("history.delete") || "Delete"}
                   >
-                    🗑️
+                    ×
                   </button>
                 </div>
                 <div className="history-item-info">
                   <span>
-                    {item.gender === "male" ? "♂️" : "♀️"} {item.weight}kg, {item.height}cm, {item.age} {t("history.years") || "y"}
+                    {item.gender === "male" ? t("calculator.male") || "Male" : t("calculator.female") || "Female"} - {item.weight}kg, {item.height}cm, {item.age} {t("history.years") || "y"}
                   </span>
                   <span className="period-badge">{item.period === "week" ? t("calculator.week") || "Week" : t("calculator.day") || "Day"}</span>
                 </div>

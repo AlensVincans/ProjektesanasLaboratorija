@@ -280,6 +280,34 @@ export default function UserForm() {
       }
       // Save meal plan to localStorage
       localStorage.setItem("current_meal_plan", JSON.stringify(data));
+      
+      // Save to history if user is logged in
+      try {
+        const saveResp = await fetch("http://localhost:5000/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            gender: body.gender,
+            age: body.age,
+            weight: body.weight,
+            height: body.height,
+            activity: body.activity,
+            allergens: body.allergens,
+            period: body.period,
+            vegetarian: body.vegetarian || false,
+            total_cost: data.total_cost || 0,
+            nutrient_totals: data.nutrient_totals || {},
+            diet: data.diet || {},
+            meal_plan: data.meal_plan || ''
+          }),
+        });
+        if (saveResp.ok) {
+          console.log("Meal plan saved to history");
+        }
+      } catch (e) {
+        console.error("Error saving meal plan to history:", e);
+      }
     } catch (e) {
       setMealPlanErr(String(e.message || e));
     } finally {

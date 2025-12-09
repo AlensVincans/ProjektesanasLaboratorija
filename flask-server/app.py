@@ -30,9 +30,10 @@ CORS(app, supports_credentials=True, resources={r"/*": {"origins": FRONTEND_ORIG
 logging.basicConfig(level=logging.DEBUG)
 
 ACTIVITY_MULTIPLIERS = {
+    "sedentary": 1.15,  # Сидячий образ жизни
     "low": 1.2,
-    "moderate": 1.6,
-    "active": 1.9
+    "moderate": 1.5,  # Слегка снижено для более реалистичных значений
+    "active": 1.75  # Слегка снижено
 }
 
 def calculate_bmr(gender, weight, height, age):
@@ -41,9 +42,18 @@ def calculate_bmr(gender, weight, height, age):
     else:
         return 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
 
-def calculate_energy_needs(bmr, activity):
-    multiplier = ACTIVITY_MULTIPLIERS.get(activity.lower(), 1.4)
-    return bmr * multiplier
+def calculate_energy_needs(bmr, activity, gender="male"):
+    """Calculate energy needs with gender-specific adjustments for more realistic values."""
+    multiplier = ACTIVITY_MULTIPLIERS.get(activity.lower(), 1.3)
+    base_energy = bmr * multiplier
+    
+    # Для женщин немного снижаем значения для более реалистичных результатов
+    if gender.lower() == "female":
+        # Дополнительное снижение на 5-10% для женщин с низкой активностью
+        if activity.lower() in ["sedentary", "low"]:
+            base_energy *= 0.95
+    
+    return base_energy
 
 def get_efsa_norms(gender, weight, age, eer_kcal, period_days=1):
     mj_per_day = eer_kcal / 238.83
@@ -210,7 +220,7 @@ THE RESPONSE MUST BE IN ENGLISH!
 def load_products_from_db():
     """Loads products from the SQLite database."""
     import os
-    db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.db')
+    db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.sqlite')
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
@@ -275,7 +285,7 @@ def calculate_tdee():
     activity = data.get('activity', 'sedentary')
     
     bmr = calculate_bmr(gender, weight, height, age)
-    eer_kcal = calculate_energy_needs(bmr, activity)
+    eer_kcal = calculate_energy_needs(bmr, activity, gender)
     
     return jsonify({'kcal': round(eer_kcal, 2), 'bmr': round(bmr, 2)})
 
@@ -304,7 +314,7 @@ def optimize_diet():
     period_days = 7 if period.lower() == 'week' else 1
 
     bmr = calculate_bmr(gender, weight, height, age)
-    eer_kcal = calculate_energy_needs(bmr, activity)
+    eer_kcal = calculate_energy_needs(bmr, activity, gender)
     norms, norms_upper = get_efsa_norms(gender, weight, age, eer_kcal, period_days)
 
     # Load products from DB
@@ -777,7 +787,7 @@ def get_calculation_history():
         return jsonify({'error': 'Invalid user session'}), 400
     
     try:
-        db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.db')
+        db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.sqlite')
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
@@ -785,7 +795,7 @@ def get_calculation_history():
         cursor.execute('''
             SELECT id, created_at, gender, weight, height, age, activity, period,
                    allergens, vegetarian, total_cost, total_kcal, total_protein,
-                   total_fat, total_carbs, diet_json
+                   total_fat, total_carbs, diet_json, meal_plan
             FROM calculation_history
             WHERE user_id = ?
             ORDER BY created_at DESC
@@ -813,7 +823,8 @@ def get_calculation_history():
                 'total_protein': row[12],
                 'total_fat': row[13],
                 'total_carbs': row[14],
-                'diet': json.loads(row[15]) if row[15] else {}
+                'diet': json.loads(row[15]) if row[15] else {},
+                'meal_plan': row[16] if len(row) > 16 else ''
             })
         
         return jsonify({'history': history, 'logged_in': True})
@@ -858,9 +869,10 @@ def save_calculation():
         total_carbs = float(nutrient_totals.get('carbs', 0))
         diet = data.get('diet', {})
         diet_json = json.dumps(diet)
+        meal_plan = data.get('meal_plan', '')
         
         # Save to database
-        db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.db')
+        db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.sqlite')
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
@@ -868,11 +880,11 @@ def save_calculation():
             INSERT INTO calculation_history 
             (user_id, user_email, gender, weight, height, age, activity, period,
              allergens, vegetarian, total_cost, total_kcal, total_protein,
-             total_fat, total_carbs, diet_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             total_fat, total_carbs, diet_json, meal_plan)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (user_id, user_email, gender, weight, height, age, activity, period,
               allergens, vegetarian, total_cost, total_kcal, total_protein,
-              total_fat, total_carbs, diet_json))
+              total_fat, total_carbs, diet_json, meal_plan))
         
         calculation_id = cursor.lastrowid
         conn.commit()
@@ -900,7 +912,7 @@ def delete_calculation(calculation_id):
         return jsonify({'error': 'Invalid user session'}), 400
     
     try:
-        db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.db')
+        db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.sqlite')
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
@@ -935,7 +947,7 @@ def export_history():
         return jsonify({'error': 'Invalid user session'}), 400
     
     try:
-        db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.db')
+        db_path = os.path.join(os.path.dirname(__file__), 'db', 'food.sqlite')
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
@@ -986,6 +998,81 @@ def export_history():
     except Exception as e:
         logging.error(f"Error exporting history: {str(e)}")
         return jsonify({'error': f'Failed to export history: {str(e)}'}), 500
+
+
+@app.route('/chatgpt', methods=['POST'])
+def chatgpt_endpoint():
+    """ChatGPT endpoint for general nutrition questions."""
+    try:
+        # Get API key from environment
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'OpenAI API key not found. Please set OPENAI_API_KEY environment variable.'}), 500
+        
+        data = request.json
+        if not isinstance(data, dict):
+            return jsonify({'error': 'Invalid input: JSON object required'}), 400
+        
+        user_message = data.get('message', '')
+        language = data.get('language', 'lv')
+        conversation_history = data.get('conversation_history', [])
+        
+        if not user_message:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        # Build system message based on language
+        if language == 'lv':
+            system_message = 'Tu esi profesionāls uztura speciālists un dietologs ar plašu pieredzi. Palīdzi lietotājam ar padomiem par veselīgu uzturu, receptēm un uzturvērtību. Atbildi vienmēr latviešu valodā, būtīgi un praktiski.'
+        else:
+            system_message = 'You are a professional nutritionist and dietitian with extensive experience. Help the user with advice on healthy nutrition, recipes, and nutritional value. Always respond in English, concisely and practically.'
+        
+        # Build messages array
+        messages = [{'role': 'system', 'content': system_message}]
+        
+        # Add conversation history (last 10 messages to avoid token limit)
+        for msg in conversation_history[-10:]:
+            if msg.get('role') in ['user', 'assistant'] and msg.get('content'):
+                messages.append({'role': msg['role'], 'content': msg['content']})
+        
+        # Add current user message
+        messages.append({'role': 'user', 'content': user_message})
+        
+        # Send request to ChatGPT
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        request_data = {
+            'model': 'gpt-3.5-turbo',
+            'messages': messages,
+            'max_tokens': 1000,
+            'temperature': 0.7
+        }
+        
+        response = requests.post(
+            'https://api.openai.com/v1/chat/completions',
+            headers=headers,
+            json=request_data,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            ai_response = result['choices'][0]['message']['content']
+            return jsonify({'response': ai_response, 'success': True})
+        else:
+            error_msg = f"ChatGPT API error: {response.status_code} - {response.text}"
+            logging.error(error_msg)
+            return jsonify({'error': error_msg, 'success': False}), 500
+            
+    except requests.exceptions.Timeout:
+        return jsonify({'error': 'ChatGPT API timeout. Please try again.', 'success': False}), 500
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': f'Network error: {str(e)}', 'success': False}), 500
+    except Exception as e:
+        logging.error(f"Unexpected error in ChatGPT endpoint: {str(e)}")
+        return jsonify({'error': f'Unexpected error: {str(e)}', 'success': False}), 500
 
 
 if __name__ == "__main__":

@@ -56,12 +56,12 @@ export default function AboutPage() {
         <section className="about-section">
           <h2>{t("about.benefits")}</h2>
           <ul className="advantages">
-            <li>✅ {t("about.benefit1")}</li>
-            <li>✅ {t("about.benefit2")}</li>
-            <li>✅ {t("about.benefit3")}</li>
-            <li>✅ {t("about.benefit4")}</li>
-            <li>✅ {t("about.benefit5")}</li>
-            <li>✅ {t("about.benefit6")}</li>
+            <li>{t("about.benefit1")}</li>
+            <li>{t("about.benefit2")}</li>
+            <li>{t("about.benefit3")}</li>
+            <li>{t("about.benefit4")}</li>
+            <li>{t("about.benefit5")}</li>
+            <li>{t("about.benefit6")}</li>
           </ul>
         </section>
 
