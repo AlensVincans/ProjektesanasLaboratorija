@@ -271,6 +271,9 @@ def load_products_from_db():
     for row in rows:
         # Determine if lactose is present in allergens
         has_lactose = 'laktoze' in str(row[15]).lower() if row[15] else False
+        # Price in DB is stored per kilogram; convert to per 100g for 100g units
+        raw_price = row[16] or 0
+        price_per_100g = (raw_price / 10.0) if raw_price else 0
         
         food = {
             'id': row[0],
@@ -288,7 +291,7 @@ def load_products_from_db():
             'Ca': row[12] or 0,
             'P': row[13] or 0,
             'Fe': row[14] or 0,
-            'price_per_100g': row[16] or 0,
+            'price_per_100g': price_per_100g,
             'has_lactose': has_lactose,
             'allergens': row[15] or ''
         }
