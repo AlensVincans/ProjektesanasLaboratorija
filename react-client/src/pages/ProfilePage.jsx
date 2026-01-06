@@ -239,7 +239,7 @@ export default function ProfilePage() {
                           width: `${(stats.weekCalculations / stats.totalCalculations) * 100}%`,
                         }}
                       />
-                      <span>{stats.weekCalculations} {t("calculator.week") || "Week"}</span>
+                      <span>{stats.weekCalculations} {t("form.week") || "Week"}</span>
                     </div>
                     <div className="chart-bar">
                       <div
@@ -248,7 +248,7 @@ export default function ProfilePage() {
                           width: `${(stats.dayCalculations / stats.totalCalculations) * 100}%`,
                         }}
                       />
-                      <span>{stats.dayCalculations} {t("calculator.day") || "Day"}</span>
+                      <span>{stats.dayCalculations} {t("form.day") || "Day"}</span>
                     </div>
                   </div>
                 </div>
@@ -417,23 +417,23 @@ function HistoryCard({ item, isFavorite, onToggleFavorite, onDelete, onSelect, f
       </div>
       <div className="history-card-info">
         <span>
-          {item.gender === "male" ? t("calculator.male") || "Male" : t("calculator.female") || "Female"} - {item.weight}kg, {item.height}cm, {item.age}{t("history.years") || "y"}
+          {item.gender === "male" ? t("form.male") || "Male" : t("form.female") || "Female"} - {item.weight}kg, {item.height}cm, {item.age}{t("history.years") || "y"}
         </span>
         <span className={`period-badge ${item.period}`}>
-          {item.period === "week" ? t("calculator.week") || "Week" : t("calculator.day") || "Day"}
+          {item.period === "week" ? t("form.week") || "Week" : t("form.day") || "Day"}
         </span>
       </div>
       <div className="history-card-stats">
         <div className="stat">
-          <span className="stat-label">{t("results.cost") || "Cost"}</span>
+          <span className="stat-label">{t("history.cost") || "Cost"}</span>
           <span className="stat-value">€{item.total_cost?.toFixed(2) || "0.00"}</span>
         </div>
         <div className="stat">
-          <span className="stat-label">{t("results.kcal") || "Calories"}</span>
+          <span className="stat-label">{t("history.kcal") || "Calories"}</span>
           <span className="stat-value">{item.total_kcal?.toFixed(0) || "0"}</span>
         </div>
         <div className="stat">
-          <span className="stat-label">{t("results.protein") || "Protein"}</span>
+          <span className="stat-label">{t("productList.protein") || "Protein"}</span>
           <span className="stat-value">{item.total_protein?.toFixed(0) || "0"}g</span>
         </div>
       </div>
@@ -457,29 +457,29 @@ function CalculationModal({ calculation, onClose, t, formatDate }) {
           <h3>{t("history.parameters") || "Parameters"}</h3>
           <div className="modal-grid">
             <div className="modal-item">
-              <span className="modal-label">{t("calculator.gender") || "Gender"}:</span>
+              <span className="modal-label">{t("form.gender") || "Gender"}:</span>
               <span className="modal-value">
-                {calculation.gender === "male" ? t("calculator.male") || "Male" : t("calculator.female") || "Female"}
+                {calculation.gender === "male" ? t("form.male") || "Male" : t("form.female") || "Female"}
               </span>
             </div>
             <div className="modal-item">
-              <span className="modal-label">{t("calculator.weight") || "Weight"}:</span>
+              <span className="modal-label">{t("form.weight") || "Weight"}:</span>
               <span className="modal-value">{calculation.weight} kg</span>
             </div>
             <div className="modal-item">
-              <span className="modal-label">{t("calculator.height") || "Height"}:</span>
+              <span className="modal-label">{t("form.height") || "Height"}:</span>
               <span className="modal-value">{calculation.height} cm</span>
             </div>
             <div className="modal-item">
-              <span className="modal-label">{t("calculator.age") || "Age"}:</span>
+              <span className="modal-label">{t("form.age") || "Age"}:</span>
               <span className="modal-value">{calculation.age}</span>
             </div>
             <div className="modal-item">
-              <span className="modal-label">{t("calculator.activity") || "Activity"}:</span>
+              <span className="modal-label">{t("form.physicalActivity") || "Activity"}:</span>
               <span className="modal-value">{calculation.activity}</span>
             </div>
             <div className="modal-item">
-              <span className="modal-label">{t("calculator.period") || "Period"}:</span>
+              <span className="modal-label">{t("form.period") || "Period"}:</span>
               <span className="modal-value">{calculation.period}</span>
             </div>
           </div>
@@ -491,28 +491,28 @@ function CalculationModal({ calculation, onClose, t, formatDate }) {
             <div className="nutrition-item-modal">
               <span className="nutrition-icon nutrition-icon-calories"></span>
               <div>
-                <div className="nutrition-label">{t("results.kcal") || "Calories"}</div>
+                <div className="nutrition-label">{t("history.kcal") || "Calories"}</div>
                 <div className="nutrition-value">{calculation.total_kcal?.toFixed(0) || "0"} kcal</div>
               </div>
             </div>
             <div className="nutrition-item-modal">
               <span className="nutrition-icon nutrition-icon-protein"></span>
               <div>
-                <div className="nutrition-label">{t("results.protein") || "Protein"}</div>
+                <div className="nutrition-label">{t("productList.protein") || "Protein"}</div>
                 <div className="nutrition-value">{calculation.total_protein?.toFixed(1) || "0"} g</div>
               </div>
             </div>
             <div className="nutrition-item-modal">
               <span className="nutrition-icon nutrition-icon-fat"></span>
               <div>
-                <div className="nutrition-label">{t("results.fat") || "Fat"}</div>
+                <div className="nutrition-label">{t("productList.fat") || "Fat"}</div>
                 <div className="nutrition-value">{calculation.total_fat?.toFixed(1) || "0"} g</div>
               </div>
             </div>
             <div className="nutrition-item-modal">
               <span className="nutrition-icon nutrition-icon-carbs"></span>
               <div>
-                <div className="nutrition-label">{t("results.carbs") || "Carbs"}</div>
+                <div className="nutrition-label">{t("productList.carbs") || "Carbs"}</div>
                 <div className="nutrition-value">{calculation.total_carbs?.toFixed(1) || "0"} g</div>
               </div>
             </div>
@@ -526,23 +526,6 @@ function CalculationModal({ calculation, onClose, t, formatDate }) {
           </div>
         </div>
 
-        {calculation.meal_plan && (
-          <div className="modal-section">
-            <h3>{t("form.mealPlan") || "Meal Plan"}</h3>
-            <div className="modal-meal-plan" style={{ 
-              whiteSpace: 'pre-wrap', 
-              background: '#f8f9fa', 
-              padding: '15px', 
-              borderRadius: '8px',
-              maxHeight: '400px',
-              overflowY: 'auto',
-              lineHeight: '1.6'
-            }}>
-              {calculation.meal_plan}
-            </div>
-          </div>
-        )}
-        
         <div className="modal-section">
           <h3>{t("history.dietPlan") || "Diet Plan"}</h3>
           <div className="modal-diet-list">

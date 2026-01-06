@@ -6,6 +6,7 @@ import logging
 import requests
 import json
 import os
+import random
 import datetime
 from dotenv import load_dotenv
 import unicodedata
@@ -19,6 +20,13 @@ try:
         load_dotenv(env_path)
 except Exception:
     pass
+
+# Ensure calculation_history table exists on startup
+try:
+    import init_history_db  # creates table if missing
+    logging.info("History DB initialized: calculation_history ensured")
+except Exception as e:
+    logging.error(f"Failed to initialize history DB: {e}")
 
 app = Flask(__name__)
 # session secret for Flask sessions
@@ -113,7 +121,7 @@ def generate_meal_plan_with_chatgpt(diet_data, user_info):
         
         # Build prompts based on language
         if language == 'lv':
-            # Latvian prompt
+            # Latvian prompt (bez # virsrakstiem un bez emocijzīmēm)
             prompt = f"""
 Tu esi profesionāls uztura speciālists. Izveido detalizētu ēdienkārtu, pamatojoties uz šiem produktiem un to daudzumiem:
 
@@ -128,21 +136,36 @@ LIETOTĀJA INFORMĀCIJA:
 - Aktivitātes līmenis: {user_info.get('activity', 'moderate')}
 - Periods: {user_info.get('period', 'day')}
 
-Lūdzu, izveido ēdienkārtu, kas ietver:
-1. ĒDIENU SADALĪJUMU (brokastis, pusdienas, vakariņas, uzkodas)
-2. KONKRĒTUS RECEPTES ar precīziem katra produkta daudzumiem
-3. ĒDIENU LAIKU
-4. PRAKTISKUS GATAVOŠANAS PADOMUS
+Lūdzu, izveido ēdienkārtu skaidrā, strukturētā formā, BEZ # virsrakstiem un BEZ emocijzīmēm. Izmanto šādas sadaļas ar vienkāršiem virsrakstiem:
 
-Atbildei jābūt strukturētai un praktiskai. Izmanto tikai produktus, kas uzskaitīti augstāk.
+BROKASTIS (7:00-9:00)
+Ēdiena nosaukums
+Sastāvdaļas:
+- produkts: daudzums g
+Gatavošana:
+[īss apraksts]
+Uzturvērtība: ~X kcal, X g olbaltumvielas, X g tauki, X g ogļhidrāti
 
-Formatē atbildi skaidrā, organizētā veidā ar sadaļām katrai maltītei un iekļauj uzturvērtības informāciju.
+PUSDIENAS (12:00-14:00)
+[līdzīgi]
+
+VAKARIŅAS (18:00-20:00)
+[līdzīgi]
+
+UZKODAS
+[ja nepieciešams]
+
+PADOMI:
+- praktisks padoms 1
+- praktisks padoms 2
+
+Izmanto tikai produktus, kas uzskaitīti augstāk, ar norādītajiem daudzumiem.
 
 ATBILDEI JĀBŪT LATVIEŠU VALODĀ!
 """
-            system_message = 'Tu esi profesionāls uztura speciālists ar plašu pieredzi ēdienkārtu izveidē un uztura ieteikumos. Atbildi vienmēr latviešu valodā.'
+            system_message = 'Tu esi profesionāls uztura speciālists ar plašu pieredzi. Atbildi vienmēr latviešu valodā, skaidri un bez emocijzīmēm.'
         else:
-            # English prompt (default)
+            # English prompt (no # headings, no emojis)
             prompt = f"""
 You are a professional nutritionist. Create a detailed meal plan based on these products and their amounts:
 
@@ -157,19 +180,34 @@ USER INFORMATION:
 - Activity level: {user_info.get('activity', 'moderate')}
 - Period: {user_info.get('period', 'day')}
 
-Please create a meal plan that includes:
-1. MEAL DISTRIBUTION (breakfast, lunch, dinner, snacks)
-2. SPECIFIC RECIPES with precise amounts of each product
-3. MEAL TIMES
-4. PRACTICAL COOKING TIPS
+Please create a meal plan in a clear, structured format WITHOUT # headings and WITHOUT emojis. Use simple section titles:
 
-The response should be structured and practical. Use only the products listed above.
+BREAKFAST (7:00-9:00)
+Dish Name
+Ingredients:
+- product: amount g
+Preparation:
+[brief description]
+Nutrition: ~X kcal, X g protein, X g fat, X g carbs
 
-Format your response in a clear, organized way with sections for each meal and include nutritional information.
+LUNCH (12:00-14:00)
+[similar]
+
+DINNER (18:00-20:00)
+[similar]
+
+SNACKS
+[if needed]
+
+TIPS:
+- practical tip 1
+- practical tip 2
+
+Use ONLY the products listed above with their specified amounts.
 
 THE RESPONSE MUST BE IN ENGLISH!
 """
-            system_message = 'You are a professional nutritionist with extensive experience in meal plan creation and nutrition recommendations. Always respond in English.'
+            system_message = 'You are a professional nutritionist. Always respond in English, clearly and without emojis.'
 
         # Send request to ChatGPT
         headers = {
@@ -395,9 +433,19 @@ def optimize_diet():
     x_vars = {name_to_var[f['name']]: LpVariable(name_to_var[f['name']], lowBound=0, upBound=min(3 * period_days, per_product_weekly_cap_units)) for f in available_foods}
     x_by_name = {f['name']: x_vars[name_to_var[f['name']]] for f in available_foods}
 
-    # Objective: price + small health-aware nudges
+    # Objective: price + small health-aware nudges + optional variety noise
     # price term dominates, nudges push away from sweets/refined grains and toward vegetables/whole grains/legumes
     price_term = lpSum(f['price_per_100g'] * x_by_name[f['name']] for f in available_foods)
+
+    # Optional variety to avoid identical optimal sets across runs
+    variety = bool(data.get('variety', True))
+    variety_strength = float(data.get('variety_strength', 0.15))  # noise weight per 100g unit for variety
+    seed = data.get('seed')
+    rng = random.Random(seed) if seed is not None else random.Random(os.urandom(8))
+    noise_term = 0
+    if variety and available_foods:
+        noise_weights = {f['name']: rng.uniform(-variety_strength, variety_strength) for f in available_foods}
+        noise_term = lpSum(noise_weights[f['name']] * x_by_name[f['name']] for f in available_foods)
 
     for nut in nut_keys:
         model += lpSum(f[nut] * x_by_name[f['name']] for f in available_foods) >= norms[nut], f"Min_{nut}"
@@ -449,7 +497,7 @@ def optimize_diet():
     # Health-aware nudges in objective (very small weights)
     nudge_penalty = lpSum(0.01 * x_by_name[n] for n in (sweets + refined_grains)) if (sweets or refined_grains) else 0
     nudge_reward = lpSum(-0.005 * x_by_name[n] for n in (vegetables + whole_grains + legumes)) if (vegetables or whole_grains or legumes) else 0
-    model += price_term + nudge_penalty + nudge_reward, "Total_Cost_With_Health_Nudges"
+    model += price_term + noise_term + nudge_penalty + nudge_reward, "Total_Cost_With_Health_Nudges_Variety"
 
     # Oils: ≤30g/day (WHO) → 210g/week → 2.1 units/week
     if oils:

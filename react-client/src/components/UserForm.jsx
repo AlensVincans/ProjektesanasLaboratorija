@@ -389,9 +389,7 @@ export default function UserForm() {
           {optLoading ? t("form.optimizing") : t("form.optimize")}
         </button>
 
-        <button onClick={generateMealPlan} disabled={mealPlanLoading || optLoading} className="secondary">
-          {mealPlanLoading ? t("form.generating") : t("form.generateMealPlan")}
-        </button>
+        {/* Meal plan generation is handled in Recipes; button removed from Calculator */}
 
         {savedMsg && <span className="muted">{savedMsg}</span>}
       </div>

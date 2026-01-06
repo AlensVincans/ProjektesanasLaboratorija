@@ -123,8 +123,8 @@ export default function HistoryPage() {
           <p>{t("history.noHistory") || "No calculations yet. Start by creating a new calculation!"}</p>
         </div>
       ) : (
+        <>
         <div className="history-content">
-          <div className="history-list">
             {history.map((item) => (
               <div
                 key={item.id}
@@ -146,9 +146,9 @@ export default function HistoryPage() {
                 </div>
                 <div className="history-item-info">
                   <span>
-                    {item.gender === "male" ? t("calculator.male") || "Male" : t("calculator.female") || "Female"} - {item.weight}kg, {item.height}cm, {item.age} {t("history.years") || "y"}
+                    {item.gender === "male" ? t("form.male") || "Male" : t("form.female") || "Female"} - {item.weight}kg, {item.height}cm, {item.age} {t("history.years") || "y"}
                   </span>
-                  <span className="period-badge">{item.period === "week" ? t("calculator.week") || "Week" : t("calculator.day") || "Day"}</span>
+                  <span className="period-badge">{item.period === "week" ? t("form.week") || "Week" : t("form.day") || "Day"}</span>
                 </div>
                 <div className="history-item-summary">
                   <div className="summary-item">
@@ -160,7 +160,6 @@ export default function HistoryPage() {
                 </div>
               </div>
             ))}
-          </div>
 
           {selectedCalculation && (
             <div className="calculation-details">
@@ -170,27 +169,27 @@ export default function HistoryPage() {
                 <h3>{t("history.parameters") || "Parameters"}</h3>
                 <div className="details-grid">
                   <div className="detail-item">
-                    <span className="detail-label">{t("calculator.gender") || "Gender"}:</span>
-                    <span className="detail-value">{selectedCalculation.gender === "male" ? t("calculator.male") || "Male" : t("calculator.female") || "Female"}</span>
+                    <span className="detail-label">{t("form.gender") || "Gender"}:</span>
+                    <span className="detail-value">{selectedCalculation.gender === "male" ? t("form.male") || "Male" : t("form.female") || "Female"}</span>
                   </div>
                   <div className="detail-item">
-                    <span className="detail-label">{t("calculator.weight") || "Weight"}:</span>
+                    <span className="detail-label">{t("form.weight") || "Weight"}:</span>
                     <span className="detail-value">{selectedCalculation.weight} kg</span>
                   </div>
                   <div className="detail-item">
-                    <span className="detail-label">{t("calculator.height") || "Height"}:</span>
+                    <span className="detail-label">{t("form.height") || "Height"}:</span>
                     <span className="detail-value">{selectedCalculation.height} cm</span>
                   </div>
                   <div className="detail-item">
-                    <span className="detail-label">{t("calculator.age") || "Age"}:</span>
+                    <span className="detail-label">{t("form.age") || "Age"}:</span>
                     <span className="detail-value">{selectedCalculation.age}</span>
                   </div>
                   <div className="detail-item">
-                    <span className="detail-label">{t("calculator.activity") || "Activity"}:</span>
+                    <span className="detail-label">{t("form.physicalActivity") || "Activity"}:</span>
                     <span className="detail-value">{selectedCalculation.activity}</span>
                   </div>
                   <div className="detail-item">
-                    <span className="detail-label">{t("calculator.period") || "Period"}:</span>
+                    <span className="detail-label">{t("form.period") || "Period"}:</span>
                     <span className="detail-value">{selectedCalculation.period}</span>
                   </div>
                 </div>
@@ -200,19 +199,19 @@ export default function HistoryPage() {
                 <h3>{t("history.nutrition") || "Nutrition Summary"}</h3>
                 <div className="nutrition-grid">
                   <div className="nutrition-item">
-                    <span className="nutrition-label">{t("results.kcal") || "Energy"}:</span>
+                    <span className="nutrition-label">{t("history.kcal") || "Energy"}:</span>
                     <span className="nutrition-value">{selectedCalculation.total_kcal?.toFixed(0) || "0"} kcal</span>
                   </div>
                   <div className="nutrition-item">
-                    <span className="nutrition-label">{t("results.protein") || "Protein"}:</span>
+                    <span className="nutrition-label">{t("productList.protein") || "Protein"}:</span>
                     <span className="nutrition-value">{selectedCalculation.total_protein?.toFixed(1) || "0"} g</span>
                   </div>
                   <div className="nutrition-item">
-                    <span className="nutrition-label">{t("results.fat") || "Fat"}:</span>
+                    <span className="nutrition-label">{t("productList.fat") || "Fat"}:</span>
                     <span className="nutrition-value">{selectedCalculation.total_fat?.toFixed(1) || "0"} g</span>
                   </div>
                   <div className="nutrition-item">
-                    <span className="nutrition-label">{t("results.carbs") || "Carbs"}:</span>
+                    <span className="nutrition-label">{t("productList.carbs") || "Carbs"}:</span>
                     <span className="nutrition-value">{selectedCalculation.total_carbs?.toFixed(1) || "0"} g</span>
                   </div>
                   <div className="nutrition-item highlight">
@@ -236,6 +235,7 @@ export default function HistoryPage() {
             </div>
           )}
         </div>
+        </>
       )}
     </div>
   );

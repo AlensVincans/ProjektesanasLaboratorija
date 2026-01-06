@@ -1,3 +1,5 @@
+* { box-sizing: border-box; }
+
 .history-page {
   padding: 20px;
   max-width: 1400px;
@@ -69,17 +71,12 @@
 
 .history-content {
   display: grid;
-  grid-template-columns: 350px 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
 
 .history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
-  padding-right: 10px;
+  display: contents;
 }
 
 .history-item {
@@ -89,6 +86,9 @@
   padding: 15px;
   cursor: pointer;
   transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
 }
 
 .history-item:hover {
@@ -120,11 +120,19 @@
   font-size: 1.2rem;
   cursor: pointer;
   padding: 5px;
-  transition: transform 0.2s;
+  transition: transform 0.2s, background-color 0.2s;
+  color: #c33;
 }
 
 .delete-btn:hover {
   transform: scale(1.2);
+  background-color: #fee;
+  border-radius: 6px;
+}
+
+.history-item:focus-visible {
+  outline: 2px solid #4caf50;
+  outline-offset: 2px;
 }
 
 .history-item-info {
@@ -163,6 +171,8 @@
   padding: 25px;
   max-height: calc(100vh - 200px);
   overflow-y: auto;
+  grid-column: 1 / -1;
+  margin-top: 20px;
 }
 
 .calculation-details h2 {
@@ -254,25 +264,38 @@
 .product-name {
   font-weight: 500;
   color: #2c3e50;
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .product-amount {
   font-weight: 600;
   color: #4caf50;
+  white-space: nowrap;
 }
 
 /* Responsive design */
+@media (max-width: 1400px) {
+  .history-content {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 1024px) {
   .history-content {
-    grid-template-columns: 1fr;
-  }
-
-  .history-list {
-    max-height: 400px;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
+  .history-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
   .details-grid,
   .nutrition-grid {
     grid-template-columns: 1fr;

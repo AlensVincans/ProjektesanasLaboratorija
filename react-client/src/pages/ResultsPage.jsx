@@ -12,7 +12,6 @@ export default function ResultsPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState({ allergens: [], dislikes: [] });
   const [diet, setDiet] = useState(null);
-  const [mealPlan, setMealPlan] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Load data from localStorage or location state
@@ -20,16 +19,12 @@ export default function ResultsPage() {
     // Check if diet was passed via navigation state
     if (location.state && location.state.diet) {
       setDiet(location.state.diet);
-      if (location.state.mealPlan) {
-        setMealPlan(location.state.mealPlan);
-      }
       setLoading(false);
       return;
     }
 
     // Otherwise load from localStorage
     const savedDiet = localStorage.getItem("current_diet");
-    const savedMealPlan = localStorage.getItem("current_meal_plan");
     const raw = localStorage.getItem("demo_profile");
     
     if (savedDiet) {
@@ -37,14 +32,6 @@ export default function ResultsPage() {
         setDiet(JSON.parse(savedDiet));
       } catch (e) {
         console.error("Error loading diet:", e);
-      }
-    }
-    
-    if (savedMealPlan) {
-      try {
-        setMealPlan(JSON.parse(savedMealPlan));
-      } catch (e) {
-        console.error("Error loading meal plan:", e);
       }
     }
     
@@ -111,26 +98,6 @@ export default function ResultsPage() {
           <div className="results-section">
             <ProductList diet={diet} />
           </div>
-          {mealPlan && mealPlan.meal_plan && (
-            <div className="results-section">
-              <div className="card">
-                <h3>{t("form.mealPlan") || "Meal Plan"}</h3>
-                <div 
-                  style={{ 
-                    whiteSpace: "pre-wrap", 
-                    lineHeight: "1.6",
-                    padding: "12px",
-                    backgroundColor: "#f9f9f9",
-                    borderRadius: "4px",
-                    maxHeight: "500px",
-                    overflowY: "auto"
-                  }}
-                >
-                  {mealPlan.meal_plan}
-                </div>
-              </div>
-            </div>
-          )}
           <div className="results-section">
             <RecipeList
               allergens={profile.allergens || []}
