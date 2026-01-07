@@ -16,7 +16,7 @@ export default function ProfilePage() {
     setLoading(true);
     try {
       // Fetch user info
-      const userResp = await fetch("http://localhost:5000/user", {
+      const userResp = await fetch("/api/user", {
         credentials: "include",
       });
       const userData = await userResp.json();
@@ -29,7 +29,7 @@ export default function ProfilePage() {
       setUser(userData.user);
 
       // Fetch history
-      const historyResp = await fetch("http://localhost:5000/history", {
+      const historyResp = await fetch("/api/history", {
         credentials: "include",
       });
       const historyData = await historyResp.json();
@@ -107,7 +107,7 @@ export default function ProfilePage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/history/${id}`, {
+      const response = await fetch(`/api/history/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -141,7 +141,7 @@ export default function ProfilePage() {
 
   const exportHistory = async () => {
     try {
-      const response = await fetch("http://localhost:5000/history/export", {
+      const response = await fetch("/api/history/export", {
         credentials: "include",
       });
 

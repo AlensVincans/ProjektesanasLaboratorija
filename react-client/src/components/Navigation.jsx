@@ -9,7 +9,7 @@ export default function Navigation() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:5000/user", { credentials: "include" })
+    fetch("/api/user", { credentials: "include" })
       .then((r) => r.json())
       .then((data) => {
         if (data.logged_in) setUser(data.user);
@@ -69,10 +69,10 @@ export default function Navigation() {
                   />
                   <span className="nav-username">{user.login || user.name || user.email}</span>
                 </Link>
-                <a className="nav-link logout-link" href="http://localhost:5000/logout">{t("navigation.logout")}</a>
+                <a className="nav-link logout-link" href="/api/logout">{t("navigation.logout")}</a>
               </>
             ) : (
-              <a className="nav-link" href="http://localhost:5000/login">{t("navigation.login")}</a>
+              <a className="nav-link" href="/api/login">{t("navigation.login")}</a>
             )}
           </div>
         </div>

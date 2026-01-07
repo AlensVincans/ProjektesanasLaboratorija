@@ -24,7 +24,7 @@ export default function ChatGPTPage() {
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:5000/chatgpt", {
+      const response = await fetch("/api/chatgpt", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

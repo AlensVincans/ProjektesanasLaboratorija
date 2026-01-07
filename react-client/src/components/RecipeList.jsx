@@ -40,7 +40,7 @@ export default function RecipeList({ allergens = [], dislikes = [] }) {
         diet: diet.diet || {}
       };
 
-      const response = await fetch("http://localhost:5000/meal-plan", {
+      const response = await fetch("/api/meal-plan", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

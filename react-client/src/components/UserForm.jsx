@@ -161,7 +161,7 @@ export default function UserForm() {
 
     // Calculate TDEE
     try {
-      const resp = await fetch("http://localhost:5000/tdee", {
+      const resp = await fetch("/api/tdee", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -192,7 +192,7 @@ export default function UserForm() {
     setMealPlan(null); // Clear meal plan when optimizing again
 
     try {
-      const resp = await fetch("http://localhost:5000/optimize", {
+      const resp = await fetch("/api/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -224,7 +224,7 @@ export default function UserForm() {
 
   const saveToHistory = async (params, results) => {
     try {
-      await fetch("http://localhost:5000/history", {
+      await fetch("/api/history", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -255,7 +255,7 @@ export default function UserForm() {
     setMealPlan(null);
 
     try {
-      const resp = await fetch("http://localhost:5000/meal-plan", {
+      const resp = await fetch("/api/meal-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -283,7 +283,7 @@ export default function UserForm() {
       
       // Save to history if user is logged in
       try {
-        const saveResp = await fetch("http://localhost:5000/history", {
+        const saveResp = await fetch("/api/history", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

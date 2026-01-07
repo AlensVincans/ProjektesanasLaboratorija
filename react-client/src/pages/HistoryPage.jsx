@@ -18,7 +18,7 @@ export default function HistoryPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:5000/history", {
+      const response = await fetch("/api/history", {
         credentials: "include",
       });
 
@@ -50,7 +50,7 @@ export default function HistoryPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/history/${id}`, {
+      const response = await fetch(`/api/history/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -92,7 +92,7 @@ export default function HistoryPage() {
         </div>
         <div className="not-logged-in">
           <p>{t("history.notLoggedIn") || "Please log in to view your calculation history."}</p>
-          <a href="http://localhost:5000/login" className="login-btn">
+          <a href="/api/login" className="login-btn">
             {t("navigation.login") || "Login with Google"}
           </a>
         </div>

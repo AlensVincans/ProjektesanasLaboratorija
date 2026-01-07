@@ -9,7 +9,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://localhost:5000/user', { credentials: 'include' })
+    fetch('/api/user', { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => {
         if (data.logged_in) setUser(data.user);
@@ -20,12 +20,12 @@ export default function LoginPage() {
 
   function startLogin() {
     // Redirect to backend OAuth start endpoint
-    window.location.href = 'http://localhost:5000/login';
+    window.location.href = '/api/login';
   }
 
   function doLogout() {
     // backend handles clearing session and redirects back
-    window.location.href = 'http://localhost:5000/logout';
+    window.location.href = '/api/logout';
   }
 
   return (
